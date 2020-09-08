@@ -154,7 +154,7 @@ class NMF:
             Select whether the regularization affects the components (h), the
             transformation (w) or none of them.
 
-        sparsity : integer, default: 0
+        sparsity : float, default: 0
             Sparsity target with 0 <= sparsity <= 1 representing the % rows in w or h set to 0.
 
         skewness : boolean, default False When solving mixture problems, columns of x at the extremities of the
@@ -488,7 +488,7 @@ class NTF:
 
         n_bootstrap : Number of bootstrap runs
 
-        sparsity : integer, default: 0
+        sparsity : float, default: 0
             Sparsity target with 0 <= sparsity <= 1 representing the % rows in w or h set to 0.
 
         w : array-like, shape (n_samples, n_components)
