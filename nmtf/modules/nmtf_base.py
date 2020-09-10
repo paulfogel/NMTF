@@ -985,10 +985,8 @@ def non_negative_factorization(X, W=None, H=None, n_components=None,
         Select whether the regularization affects the components (H), the
         transformation (W) or none of them.
 
-    sparsity : float, default: 0
-        Sparsity target with 0 <= sparsity <= 1 representing either:
-        - the % rows in W or H set to 0 (when use_hals = False)
-        - the mean % rows per column in W or H set to 0 (when use_hals = True)
+    sparsity : integer, default: 0
+        Sparsity target with 0 <= sparsity <= 1 representing the % rows in W or H set to 0.
 
     leverage :  None | 'standard' | 'robust', default 'standard'
         Calculate leverage of W and H rows on each component.
@@ -1456,7 +1454,7 @@ def non_negative_tensor_factorization(X, n_blocks, W=None, H=None, Q=None, n_com
                                       update_H=True,
                                       update_Q=True,
                                       fast_hals=True, n_iter_hals=2, n_shift=0,
-                                      regularization=None, sparsity=0,
+                                      sparsity=0,
                                       unimodal=False, smooth=False,
                                       apply_left=False, apply_right=False, apply_block=False,
                                       n_bootstrap=None,
@@ -1513,13 +1511,9 @@ def non_negative_tensor_factorization(X, n_blocks, W=None, H=None, Q=None, n_com
     n_shift : integer, default: 0
         max shifting in convolutional NTF
 
-    regularization :  None | 'components' | 'transformation'
-        Select whether the regularization affects the components (H), the
-        transformation (W) or none of them.
-
     sparsity : integer, default: 0
-        Sparsity target with 0 <= sparsity <= 1 representing the mean % rows per column in W or H set to 0
-  
+        sparsity level (as defined by Hoyer); +/- = make W/H sparse
+    
     unimodal : Boolean, default: False
 
     smooth : Boolean, default: False
@@ -1596,15 +1590,7 @@ def non_negative_tensor_factorization(X, n_blocks, W=None, H=None, Q=None, n_com
     tolerance = tol
     precision = EPSILON
     LogIter = verbose
-    if regularization is None:
-        NMFSparseLevel = 0
-    else:
-        if regularization == 'components':
-            NMFSparseLevel = sparsity
-        elif regularization == 'transformation':
-            NMFSparseLevel = -sparsity
-        else:
-            NMFSparseLevel = 0
+    NMFSparseLevel = sparsity
     NTFUnimodal = unimodal
     NTFSmooth = smooth
     NTFLeftComponents = apply_left

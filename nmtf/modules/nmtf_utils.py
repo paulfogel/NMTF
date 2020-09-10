@@ -7,8 +7,10 @@
 # License: MIT
 # Jan 4, '20
 
-from tkinter import *
-from tkinter import ttk
+# from tkinter import *
+# from tk import *
+# from tkinter import ttk
+# from tk import ttk
 from tqdm import tqdm
 import math
 from scipy.stats import hypergeom
