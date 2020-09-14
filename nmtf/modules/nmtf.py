@@ -459,6 +459,7 @@ class NTF:
         x,
         n_blocks,
         n_bootstrap=None,
+        regularization=None,
         sparsity=0,
         w=None,
         h=None,
@@ -487,6 +488,10 @@ class NTF:
         n_blocks : integer, number of blocks defining the 3rd dimension of the tensor
 
         n_bootstrap : Number of bootstrap runs
+
+        regularization :  None | 'components' | 'transformation'
+            Select whether the regularization affects the components (H), the
+            transformation (W) or none of them.
 
         sparsity : float, default: 0
             Sparsity target with 0 <= sparsity <= 1 representing the % rows in w or h set to 0.
@@ -563,6 +568,7 @@ class NTF:
             fast_hals=self.fast_hals,
             n_iter_hals=self.n_iter_hals,
             n_shift=self.n_shift,
+            regularization=regularization,
             sparsity=sparsity,
             unimodal=self.unimodal,
             smooth=self.smooth,
