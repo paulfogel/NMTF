@@ -730,6 +730,7 @@ def r_ntf_solve(
 
     mtsup = np.copy(mt)
     mwsup = np.copy(mw)
+    mbsup = np.copy(mb)
     # Bootstrap to assess robust clustering
     if nmf_robust_n_runs > 1:
         #     Update mwsup
@@ -949,6 +950,7 @@ def r_ntf_solve(
 
     mt = mtsup
     mw = mwsup
+    mb = mbsup
     if reverse2_hals > 0:
         add_message.insert(
             len(add_message),
@@ -1305,7 +1307,7 @@ def non_negative_factorization(
         Select whether the regularization affects the components (h), the
         transformation (w) or none of them.
 
-    sparsity : integer, default: 0
+    sparsity : float, default: 0
         Sparsity target with 0 <= sparsity <= 1 representing the % rows in w or h set to 0.
 
     leverage :  None | 'standard' | 'robust', default 'standard'
@@ -1895,6 +1897,7 @@ def non_negative_tensor_factorization(
     fast_hals=True,
     n_iter_hals=2,
     n_shift=0,
+    regularization=None,
     sparsity=0,
     unimodal=False,
     smooth=False,
@@ -1956,8 +1959,12 @@ def non_negative_tensor_factorization(
     n_shift : integer, default: 0
         max shifting in convolutional NTF
 
-    sparsity : integer, default: 0
-        sparsity level (as defined by Hoyer); +/- = make w/h sparse
+    regularization :  None | 'components' | 'transformation'
+        Select whether the regularization affects the components (H), the
+        transformation (W) or none of them.
+
+    sparsity : float, default: 0
+        Sparsity target with 0 <= sparsity <= 1 representing the mean % rows per column in W or H set to 0
 
     unimodal : Boolean, default: False
 
@@ -2030,12 +2037,19 @@ def non_negative_tensor_factorization(
     else:
         nc = n_components
 
-    # n_blocks = n_blocks  # The fuck ?
     p_block = int(p / n_blocks)
     tolerance = tol
     precision = EPSILON
     log_iter = verbose
-    nmf_sparse_level = sparsity
+    if regularization is None:
+        nmf_sparse_level = 0
+    else:
+        if regularization == 'components':
+            nmf_sparse_level = sparsity
+        elif regularization == 'transformation':
+            nmf_sparse_level = -sparsity
+        else:
+            nmf_sparse_level = 0
     ntf_unimodal = unimodal
     ntf_smooth = smooth
     ntf_left_components = apply_left

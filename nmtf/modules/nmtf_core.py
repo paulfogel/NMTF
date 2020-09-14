@@ -990,7 +990,7 @@ def ntf_solve_simple(
         nxp, n_mmis, m, mfit, mmis, my_status_box, n, p0
     )
     # alpha = nmf_sparse_level
-    alpha = nmf_sparse_level / 2
+    alpha = nmf_sparse_level * .8
     percent_zeros = 0
     iter_sparse = 0
 
@@ -1161,7 +1161,7 @@ def ntf_solve_simple(
                                                                                      iter_sparse)
 
                 if (percent_zeros < 0.99 * nmf_sparse_level) & (iter_sparse < 50):
-                    alpha *= min(1.01 * nmf_sparse_level / percent_zeros, 1.1)
+                    alpha *= min(1.05 * nmf_sparse_level / percent_zeros, 1.1)
                     if alpha < 1:
                         i_iter = 1
                         cont = 1
@@ -1171,7 +1171,7 @@ def ntf_solve_simple(
                                                                                      iter_sparse)
 
                 if (percent_zeros < 0.99 * abs(nmf_sparse_level)) & (iter_sparse < 50):
-                    alpha *= min(1.01 * abs(nmf_sparse_level) / percent_zeros, 1.1)
+                    alpha *= min(1.05 * abs(nmf_sparse_level) / percent_zeros, 1.1)
                     if abs(alpha) < 1:
                         i_iter = 1
                         cont = 1
