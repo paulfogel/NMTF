@@ -1016,7 +1016,7 @@ def NTFSolve_simple(M, Mmis, Mt0, Mw0, Mb0, nc, tolerance, LogIter, Status0, Max
     diff0 = 1.e+99
     Mpart = np.zeros((n, p0))
     # alpha = NMFSparseLevel
-    alpha = NMFSparseLevel / 2
+    alpha = NMFSparseLevel * .8
     PercentZeros = 0
     iterSparse = 0
     
@@ -1115,7 +1115,7 @@ def NTFSolve_simple(M, Mmis, Mt0, Mw0, Mb0, nc, tolerance, LogIter, Status0, Max
                     iterSparse = 0
 
                 if (PercentZeros < 0.99 * NMFSparseLevel) & (iterSparse < 50):
-                    alpha *= min(1.01 * NMFSparseLevel / PercentZeros, 1.1)
+                    alpha *= min(1.05 * NMFSparseLevel / PercentZeros, 1.1)
                     if alpha < 1:
                         iIter = 1
                         cont = 1
@@ -1133,7 +1133,7 @@ def NTFSolve_simple(M, Mmis, Mt0, Mw0, Mb0, nc, tolerance, LogIter, Status0, Max
                     iterSparse = 0
 
                 if (PercentZeros < 0.99 * abs(NMFSparseLevel)) & (iterSparse < 50):
-                    alpha *= min(1.01 * abs(NMFSparseLevel) / PercentZeros, 1.1)
+                    alpha *= min(1.05 * abs(NMFSparseLevel) / PercentZeros, 1.1)
                     if abs(alpha) < 1:
                         iIter = 1
                         cont = 1
@@ -1919,4 +1919,3 @@ def NTFUpdate(NBlocks, Mpart, IDBlockp, p, Mb, k, Mt, n, Mw, n_Mmis, Mmis, Mres,
             NTFUnimodal, NTFLeftComponents, NTFSmooth, A, NMFFixUserRHE, \
             denomw, Mt2, NTFRightComponents, B, NMFFixUserBHE, MtMw, nxp, \
             denomBlock, NTFBlockComponents, C, Mfit, NMFPriors
- 
