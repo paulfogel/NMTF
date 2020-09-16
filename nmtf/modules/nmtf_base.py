@@ -731,6 +731,7 @@ def r_ntf_solve(
     mtsup = np.copy(mt)
     mwsup = np.copy(mw)
     mbsup = np.copy(mb)
+    diff_sup = diff
     # Bootstrap to assess robust clustering
     if nmf_robust_n_runs > 1:
         #     Update mwsup
@@ -951,6 +952,7 @@ def r_ntf_solve(
     mt = mtsup
     mw = mwsup
     mb = mbsup
+    diff = diff_sup
     if reverse2_hals > 0:
         add_message.insert(
             len(add_message),
