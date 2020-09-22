@@ -35,49 +35,59 @@
 <dl>
 <dt id="nmtf.modules.nmtf.NMF"><code class="flex name class">
 <span>class <span class="ident">NMF</span></span>
-<span>(</span><span>n_components=None, beta_loss='frobenius', use_hals=False, tol=1e-06, max_iter=150, max_iter_mult=20, leverage='standard', convex=None, kernel='linear', random_state=None, verbose=0)</span>
+<span>(</span><span>n_components: int = None, n_update_w: int = None, n_update_h: int = None, beta_loss: str = 'frobenius', use_hals: bool = False, tol: float = 1e-06, max_iter=150, max_iter_mult=20, leverage='standard', convex=None, kernel='linear', random_state=None, verbose=0, x: Union[numpy.ndarray, NoneType] = None, w_input: Union[numpy.ndarray, NoneType] = None, h_input: Union[numpy.ndarray, NoneType] = None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Initialize NMF model</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>n_components</code></strong> :&ensp;<code>integer</code></dt>
+<dt><strong><code>n_components</code></strong> :&ensp;<code>int</code></dt>
 <dd>Number of components, if n_components is not set : n_components = min(n_samples, n_features)</dd>
-<dt><strong><code>n_update_W</code></strong> :&ensp;<code>integer</code></dt>
-<dd>Estimate last n_update_W components from initial guesses.
-If n_update_W is not set : n_update_W = n_components.</dd>
-<dt><strong><code>n_update_H</code></strong> :&ensp;<code>integer</code></dt>
-<dd>Estimate last n_update_H components from initial guesses.
-If n_update_H is not set : n_update_H = n_components.</dd>
-<dt><strong><code>beta_loss</code></strong> :&ensp;<code>string</code>, default <code>'frobenius'</code></dt>
+<dt><strong><code>n_update_w</code></strong> :&ensp;<code>int</code></dt>
+<dd>Estimate last n_update_w components from initial guesses.
+If n_update_w is not set : n_update_W = n_components.</dd>
+<dt><strong><code>n_update_h</code></strong> :&ensp;<code>int</code></dt>
+<dd>Estimate last n_update_h components from initial guesses.
+If n_update_h is not set : n_update_H = n_components.</dd>
+<dt><strong><code>beta_loss</code></strong> :&ensp;<code>str</code>, default <code>'frobenius'</code></dt>
 <dd>String must be in {'frobenius', 'kullback-leibler'}.
-Beta divergence to be minimized, measuring the distance between X
+Beta divergence to be minimized, measuring the distance between x
 and the dot product WH. Note that values different from 'frobenius'
 (or 2) and 'kullback-leibler' (or 1) lead to significantly slower
 fits. Note that for beta_loss == 'kullback-leibler', the input
-matrix X cannot contain zeros.</dd>
-<dt><strong><code>use_hals</code></strong> :&ensp;<code>boolean</code></dt>
+matrix x cannot contain zeros.</dd>
+<dt><strong><code>use_hals</code></strong> :&ensp;<code>bool</code></dt>
 <dd>True -&gt; HALS algorithm (note that convex &amp; kullback-leibler loss options are not supported)
 False-&gt; Projected gradiant</dd>
 <dt><strong><code>tol</code></strong> :&ensp;<code>float</code>, default<code>: 1e-6</code></dt>
 <dd>Tolerance of the stopping condition.</dd>
-<dt><strong><code>max_iter</code></strong> :&ensp;<code>integer</code>, default<code>: 200</code></dt>
+<dt><strong><code>max_iter</code></strong> :&ensp;<code>int</code>, default<code>: 200</code></dt>
 <dd>Maximum number of iterations.</dd>
-<dt><strong><code>max_iter_mult</code></strong> :&ensp;<code>integer</code>, default<code>: 20</code></dt>
+<dt><strong><code>max_iter_mult</code></strong> :&ensp;<code>int</code>, default<code>: 20</code></dt>
 <dd>Maximum number of iterations in multiplicative warm-up to projected gradient (beta_loss = 'frobenius' only).</dd>
-<dt><strong><code>leverage</code></strong> :&ensp;<code>None | 'standard' | 'robust'</code>, default <code>'standard'</code></dt>
-<dd>Calculate leverage of W and H rows on each component.</dd>
+<dt><strong><code>leverage</code></strong> :&ensp;<code>str</code></dt>
+<dd>None | 'standard' | 'robust', default 'standard'
+Calculate leverage of W and H rows on each component.</dd>
 <dt><strong><code>convex</code></strong> :&ensp;<code>None | 'components' | 'transformation'</code>, default <code>None</code></dt>
 <dd>Apply convex constraint on W or H.</dd>
-<dt><strong><code>kernel</code></strong> :&ensp;<code>'linear', 'quadratic', 'radial'</code>, default <code>'linear'</code></dt>
-<dd>Can be set if convex = 'transformation'.</dd>
+<dt><strong><code>kernel</code></strong> :&ensp;<code>str</code></dt>
+<dd>'linear', 'quadratic', 'radial', default 'linear'
+Can be set if convex = 'transformation'.</dd>
 <dt><strong><code>random_state</code></strong> :&ensp;<code>int, RandomState instance</code> or <code>None</code>, optional, default<code>: None</code></dt>
 <dd>If int, random_state is the seed used by the random number generator;
 If RandomState instance, random_state is the random number generator;
 If None, the random number generator is the RandomState instance used
 by <code>np.random</code>.</dd>
-<dt><strong><code>verbose</code></strong> :&ensp;<code>integer</code>, default<code>: 0</code></dt>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code>, default<code>: 0</code></dt>
 <dd>The verbosity level (0/1).</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>Union[np.ndarray, None]</code></dt>
+<dd>The x matrix to factorize, Can not be specified if w or h was spacified</dd>
+<dt><strong><code>w_input</code></strong> :&ensp;<code>Union[np.ndarray, None]</code></dt>
+<dd>The cluster matrix from which to generate x. Can not be specified if x was specified. Need to specify also h</dd>
+<dt><strong><code>h_input</code></strong> :&ensp;<code>Union[np.ndarray, None]</code></dt>
+<dd>The weight matrix from which to generate x. Can not be specified if x was specified. Need to specify also w</dd>
+<dt><strong><code>**kwargs</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>Any keyword argument to pass to fit_transform or predict</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -85,8 +95,30 @@ by <code>np.random</code>.</dd>
 <dd>&nbsp;</dd>
 </dl>
 <h2 id="example">Example</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from nmtf import *
-&gt;&gt;&gt; myNMFmodel = NMF(n_components=4)
+<pre><code class="python-repl">&gt;&gt;&gt; from nmtf import NMF
+&gt;&gt;&gt; import numpy
+&gt;&gt;&gt; w = numpy.array([[1, 2],
+&gt;&gt;&gt;                 [3, 4],
+&gt;&gt;&gt;                 [5, 6],
+&gt;&gt;&gt;                 [7, 8],
+&gt;&gt;&gt;                 [9, 10],
+&gt;&gt;&gt;                 [11, 12]])
+&gt;&gt;&gt; h = numpy.array([[0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
+&gt;&gt;&gt;                 [0.9, 0.8, 0.7, 0.6, 0.5, 0.4]])
+&gt;&gt;&gt; x = w.dot(h)
+&gt;&gt;&gt; # Use either one of the following 2 lines
+&gt;&gt;&gt; my_nmf_model = NMF(n_components=2, w_input=w, h_input=h)
+&gt;&gt;&gt; # my_nmf_model = NMF(n_components=2, x=x)
+&gt;&gt;&gt; estimator = my_nmf_model.predict(estimator)
+&gt;&gt;&gt; # sampleGroup: the group each sample is associated with
+&gt;&gt;&gt; # estimator = my_nmf_model.permutation_test_score(estimator, RowGroups, n_permutations=100)
+&gt;&gt;&gt;
+&gt;&gt;&gt; my_nmf_model.fit_transform()
+&gt;&gt;&gt; my_nmf_model.plot()
+&gt;&gt;&gt; my_nmf_model.fig_result.savefig(&quot;result_ignore.pdf&quot;)
+&gt;&gt;&gt; my_nmf_model.fig_input.savefig(&quot;input_ignore.pdf&quot;)
+&gt;&gt;&gt; my_nmf_model.fig_diff.savefig(&quot;diff_ignore.pdf&quot;)
+&gt;&gt;&gt; my_nmf_model.fig_diff_l.savefig(&quot;diff_l_ignore.pdf&quot;)
 </code></pre>
 <h2 id="references">References</h2>
 <pre><code>P. Fogel, D.M. Hawkins, C. Beecher, G. Luta, S. S. Young (2013). A Tale of Two Matrix Factorizations.
@@ -95,10 +127,19 @@ The American Statistician, Vol. 67, Issue 4.
 C. H.Q. Ding et al (2010) Convex and Semi-Nonnegative Matrix Factorizations
 IEEE Transactions on Pattern Analysis and Machine Intelligence Vol: 32 Issue: 1
 </code></pre></div>
+<h3>Static methods</h3>
+<dl>
+<dt id="nmtf.modules.nmtf.NMF.plot_np"><code class="name flex">
+<span>def <span class="ident">plot_np</span></span>(<span>arr, ax: matplotlib.axes._axes.Axes, labels: List[str], r: int = 2) ‑> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="nmtf.modules.nmtf.NMF.fit_transform"><code class="name flex">
-<span>def <span class="ident">fit_transform</span></span>(<span>self, X, W=None, H=None, update_W=True, update_H=True, n_bootstrap=None, regularization=None, sparsity=0, skewness=False, null_priors=False)</span>
+<span>def <span class="ident">fit_transform</span></span>(<span>self, w=None, h=None, update_h=True, update_w=True, n_bootstrap=None, regularization=None, sparsity=0, skewness=False, null_priors=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compute Non-negative Matrix Factorization (NMF)</p>
@@ -109,19 +150,17 @@ dimensionality reduction, source separation or topic extraction.</p>
 and H.</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>X</code></strong> :&ensp;<code>array-like, shape (n_samples, n_features)</code></dt>
-<dd>Constant matrix.</dd>
-<dt><strong><code>W</code></strong> :&ensp;<code>array-like, shape (n_samples, n_components)</code></dt>
+<dt><strong><code>w</code></strong> :&ensp;<code>np.ndarray, shape (n_samples, n_components)</code></dt>
 <dd>prior W
 If n_update_W == 0 , it is used as a constant, to solve for H only.</dd>
-<dt><strong><code>H</code></strong> :&ensp;<code>array-like, shape (n_features, n_components)</code></dt>
+<dt><strong><code>h</code></strong> :&ensp;<code>np.ndarray, shape (n_features, n_components)</code></dt>
 <dd>prior H
 If n_update_H = 0 , it is used as a constant, to solve for W only.</dd>
-<dt><strong><code>update_W</code></strong> :&ensp;<code>boolean</code>, default<code>: True</code></dt>
+<dt><strong><code>update_w</code></strong> :&ensp;<code>boolean</code>, default<code>: True</code></dt>
 <dd>Update or keep W fixed</dd>
-<dt><strong><code>update_H</code></strong> :&ensp;<code>boolean</code>, default<code>: True</code></dt>
+<dt><strong><code>update_h</code></strong> :&ensp;<code>boolean</code>, default<code>: True</code></dt>
 <dd>Update or keep H fixed</dd>
-<dt><strong><code>n_bootstrap</code></strong> :&ensp;<code>integer</code>, default<code>: 0</code></dt>
+<dt><strong><code>n_bootstrap</code></strong> :&ensp;<code>int</code>, default<code>: 0</code></dt>
 <dd>Number of bootstrap runs.</dd>
 <dt><strong><code>regularization</code></strong> :&ensp;<code>None | 'components' | 'transformation'</code></dt>
 <dd>Select whether the regularization affects the components (H), the
@@ -130,13 +169,14 @@ transformation (W) or none of them.</dd>
 <dd>Sparsity target with 0 &lt;= sparsity &lt;= 1 representing either:
 - the % rows in W or H set to 0 (when use_hals = False)
 - the mean % rows per column in W or H set to 0 (when use_hals = True)</dd>
-<dt><strong><code>skewness</code></strong> :&ensp;<code>boolean</code>, default <code>False</code></dt>
-<dd>When solving mixture problems, columns of X at the extremities of the convex hull will be given largest weights.
+<dt><strong><code>skewness</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
+<dd>When solving mixture problems, columns of X at the extremities of the convex hull will be given largest
+weights.
 The column weight is a function of the skewness and its sign.
 The expected sign of the skewness is based on the skewness of W components, as returned by the first pass
 of a 2-steps convex NMF. Thus, during the first pass, skewness must be set to False.
 Can be set only if convex = 'transformation' and prior W and H have been defined.</dd>
-<dt><strong><code>null_priors</code></strong> :&ensp;<code>boolean</code>, default <code>False</code></dt>
+<dt><strong><code>null_priors</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
 <dd>Cells of H with prior cells = 0 will not be updated.
 Can be set only if prior H has been defined.</dd>
 </dl>
@@ -144,34 +184,27 @@ Can be set only if prior H has been defined.</dd>
 <dl>
 <dt><code>Estimator (dictionary) with following entries</code></dt>
 <dd>&nbsp;</dd>
-<dt><strong><code>W</code></strong> :&ensp;<code>array-like, shape (n_samples, n_components)</code></dt>
+<dt><strong><code>W</code></strong> :&ensp;<code>np.ndarray, shape (n_samples, n_components)</code></dt>
 <dd>Solution to the non-negative least squares problem.</dd>
-<dt><strong><code>H</code></strong> :&ensp;<code>array-like, shape (n_components, n_features)</code></dt>
+<dt><strong><code>H</code></strong> :&ensp;<code>np.ndarray, shape (n_components, n_features)</code></dt>
 <dd>Solution to the non-negative least squares problem.</dd>
 <dt><strong><code>volume</code></strong> :&ensp;<code>scalar, volume occupied by W and H</code></dt>
 <dd>&nbsp;</dd>
-<dt><strong><code>WB</code></strong> :&ensp;<code>array-like, shape (n_samples, n_components)</code></dt>
+<dt><strong><code>WB</code></strong> :&ensp;<code>np.ndarray, shape (n_samples, n_components)</code></dt>
 <dd>A sample is clustered in cluster k if its leverage on component k is higher than on any other components.
 During each run of the bootstrap, samples are re-clustered.
 Each row of WB contains the frequencies of the n_components clusters following the bootstrap.
 Only if n_bootstrap &gt; 0.</dd>
-<dt><strong><code>HB</code></strong> :&ensp;<code>array-like, shape (n_components, n_features)</code></dt>
+<dt><strong><code>HB</code></strong> :&ensp;<code>np.ndarray, shape (n_components, n_features)</code></dt>
 <dd>A feature is clustered in cluster k if its leverage on component k is higher than on any other components.
 During each run of the bootstrap, features are re-clustered.
 Each row of HB contains the frequencies of the n_components clusters following the bootstrap.
 Only if n_bootstrap &gt; 0.</dd>
-<dt><strong><code>B</code></strong> :&ensp;<code>array-like, shape (n_observations, n_components)</code> or <code>(n_features, n_components)</code></dt>
+<dt><strong><code>B</code></strong> :&ensp;<code>np.ndarray, shape (n_observations, n_components)</code> or <code>(n_features, n_components)</code></dt>
 <dd>Only if active convex variant, H = B.T @ X or W = X @ B</dd>
 <dt><strong><code>diff</code></strong> :&ensp;<code>scalar, objective minimum achieved</code></dt>
 <dd>&nbsp;</dd>
 </dl>
-<h2 id="example">Example</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from nmtf import *
-&gt;&gt;&gt; myMMFmodel = NMF(n_components=4)
-</code></pre>
-<pre><code class="python-repl">&gt;&gt;&gt; # M: matrix to be factorized
-&gt;&gt;&gt; estimator = myNMFmodel.fit_transform(M)
-</code></pre>
 <h2 id="references">References</h2>
 <p>P. Fogel, D.M. Hawkins, C. Beecher, G. Luta, S. S. Young (2013). A Tale of Two Matrix Factorizations.
 The American Statistician, Vol. 67, Issue 4.</p>
@@ -185,11 +218,11 @@ IEEE Transactions on Pattern Analysis and Machine Intelligence Vol: 32 Issue: 1<
 <div class="desc"><p>Derives from factorization result ordered sample and feature indexes for future use in ordered heatmaps</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>estimator</code></strong> :&ensp;<code>tuplet as returned by fit_transform</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>y</code></strong> :&ensp;<code>array-like, group to be predicted</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>n_permutations</code></strong> :&ensp;<code> integer</code>, default<code>: 100</code></dt>
+<dt><strong><code>estimator</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Returned by fit_transform</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code> np.ndarray</code></dt>
+<dd>Group to be predicted</dd>
+<dt><strong><code>n_permutations</code></strong> :&ensp;<code> int</code>, default<code>: 100</code></dt>
 <dd>&nbsp;</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -200,38 +233,40 @@ IEEE Transactions on Pattern Analysis and Machine Intelligence Vol: 32 Issue: 1<
 <dd>The true score without permuting targets.</dd>
 <dt><strong><code>pvalue</code></strong> :&ensp;<code>float</code></dt>
 <dd>The p-value, which approximates the probability that the score would be obtained by chance.</dd>
-<dt><strong><code>CS</code></strong> :&ensp;<code>array-like, shape(n_components)</code></dt>
+<dt><strong><code>CS</code></strong> :&ensp;<code>np.ndarray, shape(n_components)</code></dt>
 <dd>The size of each cluster</dd>
-<dt><strong><code>CP</code></strong> :&ensp;<code>array-like, shape(n_components)</code></dt>
+<dt><strong><code>CP</code></strong> :&ensp;<code>np.ndarray, shape(n_components)</code></dt>
 <dd>The pvalue of the most significant group within each cluster</dd>
-<dt><strong><code>CG</code></strong> :&ensp;<code>array-like, shape(n_components)</code></dt>
+<dt><strong><code>CG</code></strong> :&ensp;<code>np.ndarray, shape(n_components)</code></dt>
 <dd>The index of the most significant group within each cluster</dd>
-<dt><strong><code>CN</code></strong> :&ensp;<code>array-like, shape(n_components, n_groups)</code></dt>
+<dt><strong><code>CN</code></strong> :&ensp;<code>np.ndarray, shape(n_components, n_groups)</code></dt>
 <dd>The size of each group within each cluster</dd>
-</dl>
-<h2 id="example">Example</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from nmtf import *
-&gt;&gt;&gt; myMMFmodel = NMF(n_components=4)
-&gt;&gt;&gt; # M: matrix to be factorized
-&gt;&gt;&gt; estimator = myNMFmodel.fit_transform(M)
-&gt;&gt;&gt; # sampleGroup: the group each sample is associated with
-&gt;&gt;&gt; estimator = myNMFmodel.permutation_test_score(estimator, RowGroups, n_permutations=100)
-</code></pre></div>
+</dl></div>
+</dd>
+<dt id="nmtf.modules.nmtf.NMF.plot"><code class="name flex">
+<span>def <span class="ident">plot</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="nmtf.modules.nmtf.NMF.plot_matrices"><code class="name flex">
+<span>def <span class="ident">plot_matrices</span></span>(<span>self, text: str, matrices: Union[<built-in function array>, List[<built-in function array>]], x_ax_labels: List[str] = None, w_ax_labels: List[str] = None, h_ax_labels: List[str] = None) ‑> matplotlib.figure.Figure</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 <dt id="nmtf.modules.nmtf.NMF.predict"><code class="name flex">
-<span>def <span class="ident">predict</span></span>(<span>self, estimator, blocks=None, cluster_by_stability=False, custom_order=False)</span>
+<span>def <span class="ident">predict</span></span>(<span>self, blocks=None, cluster_by_stability=False, custom_order=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Derives from factorization result ordered sample and feature indexes for future use in ordered heatmaps</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>estimator</code></strong> :&ensp;<code>tuplet as returned by fit_transform</code></dt>
-<dd>&nbsp;</dd>
-<dt><strong><code>blocks</code></strong> :&ensp;<code>array-like, shape(n_blocks)</code>, default <code>None</code></dt>
+<dt><strong><code>blocks</code></strong> :&ensp;<code>np.ndarray, shape(n_blocks)</code>, default <code>None</code></dt>
 <dd>Size of each block (if any) in ordered heatmap.</dd>
-<dt><strong><code>cluster_by_stability</code></strong> :&ensp;<code>boolean</code>, default <code>False</code></dt>
+<dt><strong><code>cluster_by_stability</code></strong> :&ensp;<code>bool</code>, default <code>False</code></dt>
 <dd>Use stability instead of leverage to assign samples/features to clusters</dd>
-<dt><strong><code>custom_order</code></strong> :&ensp;<code> boolean</code>, default <code>False</code></dt>
+<dt><strong><code>custom_order</code></strong> :&ensp;<code> bool</code>, default <code>False</code></dt>
 <dd>if False samples/features with highest leverage or stability appear on top of each cluster
 if True within cluster ordering is modified to suggest a continuum
 between adjacent clusters</dd>
@@ -240,11 +275,11 @@ between adjacent clusters</dd>
 <dl>
 <dt><code>Completed estimator with following entries:</code></dt>
 <dd>&nbsp;</dd>
-<dt><strong><code>WL</code></strong> :&ensp;<code>array-like, shape (n_samples, n_components)</code></dt>
+<dt><strong><code>WL</code></strong> :&ensp;<code>np.ndarray, shape (n_samples, n_components)</code></dt>
 <dd>Sample leverage on each component</dd>
-<dt><strong><code>HL</code></strong> :&ensp;<code>array-like, shape (n_features, n_components)</code></dt>
+<dt><strong><code>HL</code></strong> :&ensp;<code>np.ndarray, shape (n_features, n_components)</code></dt>
 <dd>Feature leverage on each component</dd>
-<dt><strong><code>QL</code></strong> :&ensp;<code>array-like, shape (n_blocks, n_components)</code></dt>
+<dt><strong><code>QL</code></strong> :&ensp;<code>np.ndarray, shape (n_blocks, n_components)</code></dt>
 <dd>Block leverage on each component (NTF only)</dd>
 <dt><strong><code>WR</code></strong> :&ensp;<code>vector-like, shape (n_samples)</code></dt>
 <dd>Ranked sample indexes (by cluster and leverage or stability)
@@ -262,14 +297,7 @@ Used to produce ordered heatmaps</dd>
 <dd>Feature assigned cluster</dd>
 <dt><strong><code>QC</code></strong> :&ensp;<code>vector-like, shape (size(blocks))</code></dt>
 <dd>Block assigned cluster (NTF only)</dd>
-</dl>
-<h2 id="example">Example</h2>
-<pre><code class="python-repl">&gt;&gt;&gt; from nmtf import *
-&gt;&gt;&gt; myMMFmodel = NMF(n_components=4)
-&gt;&gt;&gt; # M: matrix to be factorized
-&gt;&gt;&gt; estimator = myNMFmodel.fit_transform(M)
-&gt;&gt;&gt; estimator = myNTFmodel.predict(estimator)
-</code></pre></div>
+</dl></div>
 </dd>
 </dl>
 </dd>
@@ -281,13 +309,13 @@ Used to produce ordered heatmaps</dd>
 <div class="desc"><p>Initialize NTF model</p>
 <h2 id="parameters">Parameters</h2>
 <dl>
-<dt><strong><code>n_components</code></strong> :&ensp;<code>integer</code></dt>
+<dt><strong><code>n_components</code></strong> :&ensp;<code>int</code></dt>
 <dd>Number of components, if n_components is not set : n_components = min(n_samples, n_features)</dd>
-<dt><strong><code>fast_hals</code></strong> :&ensp;<code>boolean</code>, default<code>: False</code></dt>
+<dt><strong><code>fast_hals</code></strong> :&ensp;<code>bool</code>, default<code>: False</code></dt>
 <dd>Use fast implementation of HALS</dd>
-<dt><strong><code>n_iter_hals</code></strong> :&ensp;<code>integer</code>, default<code>: 2</code></dt>
+<dt><strong><code>n_iter_hals</code></strong> :&ensp;<code>int</code>, default<code>: 2</code></dt>
 <dd>Number of HALS iterations prior to fast HALS</dd>
-<dt><strong><code>n_shift</code></strong> :&ensp;<code>integer</code>, default<code>: 0</code></dt>
+<dt><strong><code>n_shift</code></strong> :&ensp;<code>int</code>, default<code>: 0</code></dt>
 <dd>max shifting in convolutional NTF</dd>
 <dt><strong><code>unimodal</code></strong> :&ensp;<code>Boolean</code>, default<code>: False</code></dt>
 <dd>&nbsp;</dd>
@@ -301,7 +329,7 @@ Used to produce ordered heatmaps</dd>
 <dd>&nbsp;</dd>
 <dt><strong><code>tol</code></strong> :&ensp;<code>float</code>, default<code>: 1e-6</code></dt>
 <dd>Tolerance of the stopping condition.</dd>
-<dt><strong><code>max_iter</code></strong> :&ensp;<code>integer</code>, default<code>: 200</code></dt>
+<dt><strong><code>max_iter</code></strong> :&ensp;<code>int</code>, default<code>: 200</code></dt>
 <dd>Maximum number of iterations.</dd>
 <dt><strong><code>leverage</code></strong> :&ensp;<code>None | 'standard' | 'robust'</code>, default <code>'standard'</code></dt>
 <dd>Calculate leverage of W and H rows on each component.</dd>
@@ -310,7 +338,7 @@ Used to produce ordered heatmaps</dd>
 If RandomState instance, random_state is the random number generator;
 If None, the random number generator is the RandomState instance used
 by <code>np.random</code>.</dd>
-<dt><strong><code>verbose</code></strong> :&ensp;<code>integer</code>, default<code>: 0</code></dt>
+<dt><strong><code>verbose</code></strong> :&ensp;<code>int</code>, default<code>: 0</code></dt>
 <dd>The verbosity level (0/1).</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -325,10 +353,19 @@ by <code>np.random</code>.</dd>
 <h2 id="reference">Reference</h2>
 <p>A. Cichocki, P.H.A.N. Anh-Huym, Fast local algorithms for large scale nonnegative matrix and tensor factorizations,
 IEICE Trans. Fundam. Electron. Commun. Comput. Sci. 92 (3) (2009) 708–721.</p></div>
+<h3>Static methods</h3>
+<dl>
+<dt id="nmtf.modules.nmtf.NTF.permutation_test_score"><code class="name flex">
+<span>def <span class="ident">permutation_test_score</span></span>(<span>estimator, y, n_permutations=100)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>See function description in class NMF</p></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="nmtf.modules.nmtf.NTF.fit_transform"><code class="name flex">
-<span>def <span class="ident">fit_transform</span></span>(<span>self, X, n_blocks, n_bootstrap=None, regularization=None, sparsity=0, W=None, H=None, Q=None, update_W=True, update_H=True, update_Q=True)</span>
+<span>def <span class="ident">fit_transform</span></span>(<span>self, x: numpy.ndarray, n_blocks: int, n_bootstrap: int = None, regularization: str = None, sparsity: float = 0, w: Union[numpy.ndarray, NoneType] = None, h: Union[numpy.ndarray, NoneType] = None, q: Union[numpy.ndarray, NoneType] = None, update_w: Union[numpy.ndarray, NoneType] = True, update_h: Union[numpy.ndarray, NoneType] = True, update_q: Union[numpy.ndarray, NoneType] = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Compute Non-negative Tensor Factorization (NTF)</p>
@@ -342,60 +379,62 @@ IEICE Trans. Fundam. Electron. Commun. Comput. Sci. 92 (3) (2009) 708–721.</p>
     Parameters
     ----------
 
-    X : array-like, shape (n_samples, n_features x n_blocks)
+    x: np.ndarray, shape (n_samples, n_features x n_blocks)
         Constant matrix.
         X is a tensor with shape (n_samples, n_features, n_blocks), however unfolded along 2nd and 3rd dimensions.
 
-    n_blocks : integer, number of blocks defining the 3rd dimension of the tensor
+    n_blocks: int
+        Number of blocks defining the 3rd dimension of the tensor
 
-    n_bootstrap : Number of bootstrap runs
+    n_bootstrap: int
+        Number of bootstrap runs
 
-    regularization :  None | 'components' | 'transformation'
+    regularization: str  None | 'components' | 'transformation'
         Select whether the regularization affects the components (H), the
         transformation (W) or none of them.
 
-    sparsity : float, default: 0
+    sparsity: float, default: 0
         Sparsity target with 0 &lt;= sparsity &lt;= 1 representing the mean % rows per column in W or H set to 0
 </code></pre>
 <p>.
-W : array-like, shape (n_samples, n_components)
+w: Union[np.ndarray, None], shape (n_samples, n_components)
 prior W</p>
-<pre><code>    H : array-like, shape (n_features, n_components)
+<pre><code>    h: Union[np.ndarray, None], shape (n_features, n_components)
         prior H
 
-    Q : array-like, shape (n_blocks, n_components)
+    q: Union[np.ndarray, None], shape (n_blocks, n_components)
         prior Q
 
-    update_W : boolean, default: True
-        Update or keep W fixed
+    update_w: bool, default: True
+        Update or keep w fixed
 
-    update_H : boolean, default: True
-        Update or keep H fixed
+    update_h: bool, default: True
+        Update or keep h fixed
 
-    update_Q : boolean, default: True
-        Update or keep Q fixed
+    update_q: bool, default: True
+        Update or keep q fixed
 
     Returns
     -------
 
     Estimator (dictionary) with following entries
 
-    W : array-like, shape (n_samples, n_components)
+    W : np.ndarray, shape (n_samples, n_components)
         Solution to the non-negative least squares problem.
 
-    H : array-like, shape (n_features, n_components)
+    H : np.ndarray, shape (n_features, n_components)
         Solution to the non-negative least squares problem.
 
-    Q : array-like, shape (n_blocks, n_components)
+    Q : np.ndarray, shape (n_blocks, n_components)
         Solution to the non-negative least squares problem.
 
     volume : scalar, volume occupied by W and H
 
-    WB : array-like, shape (n_samples, n_components)
+    WB : np.ndarray, shape (n_samples, n_components)
         Percent consistently clustered rows for each component.
         only if n_bootstrap &gt; 0.
 
-    HB : array-like, shape (n_features, n_components)
+    HB : np.ndarray, shape (n_features, n_components)
         Percent consistently clustered columns for each component.
         only if n_bootstrap &gt; 0.
 
@@ -414,12 +453,6 @@ prior W</p>
     A. Cichocki, P.H.A.N. Anh-Huym, Fast local algorithms for large scale nonnegative matrix and tensor factorizations,
     IEICE Trans. Fundam. Electron. Commun. Comput. Sci. 92 (3) (2009) 708–721.
 </code></pre></div>
-</dd>
-<dt id="nmtf.modules.nmtf.NTF.permutation_test_score"><code class="name flex">
-<span>def <span class="ident">permutation_test_score</span></span>(<span>self, estimator, y, n_permutations=100)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>See function description in class NMF</p></div>
 </dd>
 <dt id="nmtf.modules.nmtf.NTF.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, estimator, blocks=None, cluster_by_stability=False, custom_order=False)</span>
@@ -450,6 +483,9 @@ prior W</p>
 <ul class="">
 <li><code><a title="nmtf.modules.nmtf.NMF.fit_transform" href="#nmtf.modules.nmtf.NMF.fit_transform">fit_transform</a></code></li>
 <li><code><a title="nmtf.modules.nmtf.NMF.permutation_test_score" href="#nmtf.modules.nmtf.NMF.permutation_test_score">permutation_test_score</a></code></li>
+<li><code><a title="nmtf.modules.nmtf.NMF.plot" href="#nmtf.modules.nmtf.NMF.plot">plot</a></code></li>
+<li><code><a title="nmtf.modules.nmtf.NMF.plot_matrices" href="#nmtf.modules.nmtf.NMF.plot_matrices">plot_matrices</a></code></li>
+<li><code><a title="nmtf.modules.nmtf.NMF.plot_np" href="#nmtf.modules.nmtf.NMF.plot_np">plot_np</a></code></li>
 <li><code><a title="nmtf.modules.nmtf.NMF.predict" href="#nmtf.modules.nmtf.NMF.predict">predict</a></code></li>
 </ul>
 </li>

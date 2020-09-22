@@ -1073,6 +1073,7 @@ def non_negative_factorization(X, W=None, H=None, n_components=None,
     myStatusBox = StatusBoxTqdm(verbose=LogIter)
     tolerance = tol
     precision = EPSILON
+
     if (W is None) & (H is None):
         Mt, Mw = NMFInit(M, np.array([]), np.array([]), np.array([]), nc, tolerance, LogIter, myStatusBox)
         init = 'nndsvd'
