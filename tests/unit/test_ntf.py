@@ -6,33 +6,9 @@ import numpy as np
 import json
 import sys
 from pathlib import Path
-from datetime import date, datetime
+from ..utils.json_encoder import JSONEncoder
 
 DATA_PATH = Path(__file__).parent.parent / "data"
-
-
-class JSONEncoder(json.JSONEncoder):
-    """
-    Extending the JSON encoder so it knows how to serialise a dataframe
-    """
-
-    def default(self, obj):
-        if hasattr(obj, "to_json"):
-            if callable(obj.to_json):
-                try:
-                    return obj.to_json(orient="records")
-                except TypeError:
-                    return obj.to_json()
-            else:
-                return obj.to_json
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, date):
-            return obj.strftime("%Y-%m-%d")
-        elif isinstance(obj, datetime):
-            return obj.strftime("%Y-%m-%d %H:%M:%S")
-        else:
-            return json.JSONEncoder.default(self, obj)
 
 
 def test():
@@ -53,6 +29,7 @@ def test():
     # Uncomment to save the estimator in a file
     # with open(DATA_PATH / "expected_result_ntf_new.json", "w") as ofile:
     #     ofile.write(json.dumps(estimator, cls=JSONEncoder))
+    # exit(0)
 
     failed = False
     for key in estimator:
