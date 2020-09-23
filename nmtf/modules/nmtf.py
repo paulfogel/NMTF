@@ -23,22 +23,28 @@ mpl.rcParams['text.usetex'] = True
 mpl.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}\boldmath'
 
 
-class NMF:
+class NMTF:
+    """Abstract class from which NMF and NTF derive"""
 
     def __init__(
         self,
+        which: str,
         x: Union[np.ndarray, None] = None,
         w_input: Union[np.ndarray, None] = None,
         h_input: Union[np.ndarray, None] = None,
+        q_input: Union[np.ndarray, None] = None,
+        n_blocks: int = None,
         n_permutations: int = 100,
         blocks: np.ndarray = None,
         cluster_by_stability: bool = False,
         custom_order: bool = False,
         wp: Union[np.ndarray, None] = None,
         hp: Union[np.ndarray, None] = None,
+        qp: Union[np.ndarray, None] = None,
         n_components: int = None,
         update_h: bool = True,
         update_w: bool = True,
+        update_q: bool = True,
         beta_loss: str = 'frobenius',
         tol: float = 1e-6,
         max_iter: int = 200,
@@ -50,6 +56,14 @@ class NMF:
         regularization: str = None,
         sparsity: float = 0,
         use_hals: bool = False,
+        fast_hals: bool = False,
+        n_iter_hals: int = 2,
+        n_shift: int = 0,
+        unimodal: bool = False,
+        smooth: bool = False,
+        apply_left: bool = False,
+        apply_right: bool = False,
+        apply_block: bool = False,
         skewness: bool = False,
         null_priors: bool = False,
         leverage: str = "standard",
@@ -60,14 +74,28 @@ class NMF:
         Parameters
         ----------
 
+        which: str
+            "NMF" or "NTF"
+
         x: Union[np.ndarray, None]
-            The x matrix to factorize, Can not be specified if w or h was spacified
+            The x matrix to factorize, Can not be specified if w or h or q was spacified
 
         w_input: Union[np.ndarray, None]
-            The cluster matrix from which to generate x. Can not be specified if x was specified. Need to specify also h
+            The cluster matrix from which to generate x. Can not be specified if x was specified.
+            Need to specify also h (and q if which is "NTF")
 
         h_input: Union[np.ndarray, None]
-            The weight matrix from which to generate x. Can not be specified if x was specified. Need to specify also w
+            The weight matrix from which to generate x. Can not be specified if x was specified.
+            Need to specify also w (and q if which is "NTF")
+
+        q_input: Union[np.ndarray, None]
+            The 3D dimension matrix from which to generate x. Can not be specified if x was specified.
+            Need to specify also w and h.
+            To manage this third dimension, x will be flatten by doing x . (h + q), were '+' denotes the concatenation
+            of h and q.
+
+        n_blocks: int, default None
+            Number of blocks defining the 3rd dimension of the tensor (Mandatory if which = "NTF")
 
         n_permutations:  int, default: 100
 
@@ -82,21 +110,28 @@ class NMF:
              if True within cluster ordering is modified to suggest a continuum  between adjacent clusters
 
         wp: np.ndarray, shape (n_samples, n_components)
-            prior W
-            If n_update_W == 0 , it is used as a constant, to solve for H only.
+            prior w
+            If n_update_w == 0 , it is used as a constant, to solve for h only.
 
         hp: np.ndarray, shape (n_features, n_components)
-            prior H
-            If n_update_H = 0 , it is used as a constant, to solve for W only.
+            prior h
+            If n_update_h = 0 , it is used as a constant, to solve for w only.
+
+        qp: np.ndarray, shape (n_features, n_components)
+            prior q
+            If n_update_q = 0 , it is used as a constant, to solve for q only.
 
         n_components: int, default = None
             Number of components, if n_components is not set : n_components = min(n_samples, n_features)
 
         update_w: boolean, default: True
-            Update or keep W fixed
+            Update or keep w fixed
 
         update_h: boolean, default: True
-            Update or keep H fixed
+            Update or keep h fixed
+
+        update_q: boolean, default: True
+            Update or keep q fixed
 
         beta_loss: str, default 'frobenius'
             String must be in {'frobenius', 'kullback-leibler'}.
@@ -142,6 +177,25 @@ class NMF:
         use_hals: bool, default: False
             True -> HALS algorithm (note that convex & kullback-leibler loss options are not supported)
             False-> Projected gradiant
+
+        fast_hals: bool, default: False
+            Use fast implementation of HALS
+
+        n_iter_hals: int, default: 2
+            Number of HALS iterations prior to fast HALS
+
+        n_shift: int, default: 0
+            max shifting in convolutional NTF
+
+        unimodal: bool, default: False
+
+        smooth: bool, default: False
+
+        apply_left: bool, default: False
+
+        apply_right: bool, default: False
+
+        apply_block: bool, default: False
 
         skewness: bool, default False
             When solving mixture problems, columns of X at the extremities of the convex hull will be given largest
@@ -202,38 +256,23 @@ class NMF:
 
         """
 
-        if h_input is None and w_input is not None:
-            raise ValueError("You specified w but not h. Need both!")
-        if w_input is None and h_input is not None:
-            raise ValueError("You specified h but not w. Need both!")
-        if x is None and w_input is None:  # if w is None so is h, otherwise would have raised already
-            raise ValueError("Need x or w and h!")
-        if x is not None and w_input is not None:  # if w is not None neither is h, otherwise would have raised already
-            raise ValueError("Can not specify both x and w/h!")
-        if x is not None:
-            self.x = x
-            self.h_input = None
-            self.w_input = None
-        if w_input is not None and h_input is not None:
-            self.w_input = w_input
-            self.h_input = h_input
-            try:
-                self.x = w_input.dot(h_input)
-            except ValueError:
-                self.x = w_input.dot(h_input.T)
-
-        self.x_index_name = "Values"
-        self.x_cols_name = "Features"
-
+        self.which = which.upper()  # 'nmf' or 'ntf' will also work
+        self.x = x
+        self.w_input = w_input
+        self.h_input = h_input
+        self.q_input = q_input
+        self.n_blocks = n_blocks
         self.n_permutations = n_permutations
         self.blocks = blocks
         self.cluster_by_stability = cluster_by_stability
         self.custom_order = custom_order
         self.wp = wp
         self.hp = hp
+        self.qp = qp
         self.n_components = n_components
         self.update_h = update_h
         self.update_w = update_w
+        self.update_q = update_q
         self.beta_loss = beta_loss
         self.tol = tol
         self.max_iter = max_iter
@@ -245,14 +284,66 @@ class NMF:
         self.regularization = regularization
         self.sparsity = sparsity
         self.use_hals = use_hals
+        self.fast_hals = fast_hals
+        self.n_iter_hals = n_iter_hals
+        self.n_shift = n_shift
+        self.unimodal = unimodal
+        self.smooth = smooth
+        self.apply_left = apply_left
+        self.apply_right = apply_right
+        self.apply_block = apply_block
         self.skewness = skewness
         self.null_priors = null_priors
         self.leverage = leverage
         self.verbose = verbose
 
-        self.w = self.h = self.wb = self.hb = self.b = self.wdoth = self.wdothl = np.array([])
+        self.x_index_name = "Values"
+        self.x_cols_name = "Features"
+
+        # Test arguments
+
+        if self.which == "NMF":
+            if h_input is None and w_input is not None:
+                raise ValueError("You specified w but not h. Need both!")
+            elif w_input is None and h_input is not None:
+                raise ValueError("You specified h but not w. Need both!")
+            elif x is None and w_input is None:  # if w is None so is h, otherwise would have raised already
+                raise ValueError("Need x or w and h!")
+            elif x is not None and w_input is not None:  # if w is not None neither is h, otherwise would have raised
+                raise ValueError("Can not specify both x and w/h!")
+            elif w_input is not None and h_input is not None:
+                try:
+                    self.x = w_input.dot(h_input)
+                except ValueError:
+                    self.x = w_input.dot(h_input.T)
+
+        elif self.which == "NTF":
+
+            if self.n_blocks is None:
+                raise ValueError("If using NTF, must specify n_blocks")
+            test_number = sum([w_input is None, h_input is None, q_input is None])
+            if test_number == 3 and x is None:  # no x, w, h, or q was specified
+                raise ValueError("You need to specify either x or w, h and q.")
+            elif 0 <= test_number < 3 and x is not None:  # x was specified but also some of w, h and q
+                raise ValueError("You can not specify both x and w, h and/or q.")
+            elif 0 < test_number < 3 and x is None:  # some but not all of w, h and q was specified but not x
+                raise ValueError("You specified only some of w, h and q but I need the three of them!")
+            elif test_number == 0:  # w, h, and q were specified : compute x from them
+                try:
+                    self.x = w_input.dot(np.concatenate([h_input, q_input], axis=1))
+                except ValueError:
+                    self.x = w_input.dot(np.concatenate([h_input, q_input], axis=0).T)
+            elif x is None:
+                raise ValueError(f"Something weird happened. Check x, w, h and q:\n"
+                                 f" - x: {x}\n - w: {w_input}\n - h: {h_input}\n - q: {q_input}")
+        else:
+            raise ValueError(f"Argument 'which' can only be 'NMF' or 'NTF', got '{self.which}'.")
+
+        self.b = self.x_approx = self.x_approx_l = np.array([])
+        self.w = self.h = self.q = self.wb = self.hb = np.array([])
+        self.wl = self.hl = self.ql = self.hr = self.qr = np.array([])
+        self.wn = self.hn = self.wc = self.hc = self.qc = np.array([])
         self.volume = self.diff = 0
-        self.wl = self.hl = self.ql = self.wr = self.hr = self.wn = self.hn = self.wc = self.hc = self.qc = np.array([])
 
         self.estimator = None
         self.results = None
@@ -282,6 +373,9 @@ class NMF:
 
         h : np.ndarray, shape (n_components, n_features)
             Solution to the non-negative least squares problem.
+
+        q : np.ndarray, shape (n_blocks, n_components)
+            Solution to the non-negative least squares problem. (if which is 'NTF')
 
         volume : scalar, volume occupied by W and H
 
@@ -314,29 +408,58 @@ class NMF:
 
         """
 
-        self.estimator = non_negative_factorization(
-            self.x,
-            W=self.wp,
-            H=self.hp,
-            n_components=self.n_components,
-            update_W=self.update_w,
-            update_H=self.update_h,
-            beta_loss=self.beta_loss,
-            use_hals=self.use_hals,
-            n_bootstrap=self.n_bootstrap,
-            tol=self.tol,
-            max_iter=self.max_iter,
-            max_iter_mult=self.max_iter_mult,
-            regularization=self.regularization,
-            sparsity=self.sparsity,
-            leverage=self.leverage,
-            convex=self.convex,
-            kernel=self.kernel,
-            skewness=self.skewness,
-            null_priors=self.null_priors,
-            random_state=self.random_state,
-            verbose=self.verbose,
-        )
+        if self.which == "NMF":
+            self.estimator = non_negative_factorization(
+                self.x,
+                W=self.wp,
+                H=self.hp,
+                n_components=self.n_components,
+                update_W=self.update_w,
+                update_H=self.update_h,
+                beta_loss=self.beta_loss,
+                use_hals=self.use_hals,
+                n_bootstrap=self.n_bootstrap,
+                tol=self.tol,
+                max_iter=self.max_iter,
+                max_iter_mult=self.max_iter_mult,
+                regularization=self.regularization,
+                sparsity=self.sparsity,
+                leverage=self.leverage,
+                convex=self.convex,
+                kernel=self.kernel,
+                skewness=self.skewness,
+                null_priors=self.null_priors,
+                random_state=self.random_state,
+                verbose=self.verbose,
+            )
+        else:
+            self.estimator = non_negative_tensor_factorization(
+                self.x,
+                self.n_blocks,
+                W=self.wp,
+                H=self.hp,
+                Q=self.qp,
+                n_components=self.n_components,
+                update_W=self.update_w,
+                update_H=self.update_h,
+                update_Q=self.update_q,
+                fast_hals=self.fast_hals,
+                n_iter_hals=self.n_iter_hals,
+                n_shift=self.n_shift,
+                regularization=self.regularization,
+                sparsity=self.sparsity,
+                unimodal=self.unimodal,
+                smooth=self.smooth,
+                apply_left=self.apply_left,
+                apply_right=self.apply_right,
+                apply_block=self.apply_block,
+                n_bootstrap=self.n_bootstrap,
+                tol=self.tol,
+                max_iter=self.max_iter,
+                leverage=self.leverage,
+                random_state=self.random_state,
+                verbose=self.verbose,
+            )
         for arg in self.estimator:
             setattr(self, arg, self.estimator[arg])
 
@@ -355,8 +478,12 @@ class NMF:
         for arg in self.results:
             setattr(self, arg, self.results[arg])
 
-        self.wdoth = self.w.dot(self.h.T)
-        self.wdothl = self.wl.dot(self.hl.T)
+        if self.which == "NMF":
+            self.x_approx = self.w.dot(self.h.T)
+            self.x_approx_l = self.wl.dot(self.hl.T)
+        else:
+            self.x_approx = self.w.dot(np.concatenate([self.h, self.q], axis=0).T)
+            self.x_approx_l = self.wl.dot(np.concatenate([self.hl, self.q], axis=0).T)
 
     def permutation_test_score(self, y: np.ndarray):
 
@@ -399,7 +526,7 @@ class NMF:
 
         self.fig_result = self.plot_matrices(
             "$W \\cdot H^t$",
-            [self.wdoth, self.w, self.h.T],
+            [self.x_approx, self.w, self.h.T],
             x_ax_labels=["features", "values"],
             w_ax_labels=[None, "values in metafeatures"],
             h_ax_labels=["metafeatures weights in features", None]
@@ -407,7 +534,7 @@ class NMF:
 
         self.fig_result_l = self.plot_matrices(
             "$W_L \\cdot H_L^t$",
-            [self.wdoth, self.wl, self.hl.T],
+            [self.x_approx, self.wl, self.hl.T],
             x_ax_labels=["features", "values"],
             w_ax_labels=[None, "values in metafeatures"],
             h_ax_labels=["metafeatures weights in features", None]
@@ -423,12 +550,12 @@ class NMF:
 
         self.fig_diff = self.plot_matrices(
             "$\\sqrt{\\frac{\\left(W \\cdot H^t - X\\right)^2}{X^2}}$ ($\\%$)",
-            100 * np.sqrt(((self.wdoth - self.x)**2) / self.x**2)
+            100 * np.sqrt(((self.x_approx - self.x) ** 2) / self.x ** 2)
         )
 
         self.fig_diff_l = self.plot_matrices(
             "$\\sqrt{\\frac{\\left(W_L \\cdot H_L^t - X\\right)^2}{X^2}}$ ($\\%$)",
-            100 * np.sqrt(((self.wdothl - self.x)**2) / self.x**2)
+            100 * np.sqrt(((self.x_approx_l - self.x) ** 2) / self.x ** 2)
         )
 
     def plot_matrices(
@@ -485,251 +612,19 @@ class NMF:
                 ax.text(j, i, round(arr[i, j], r), ha="center", va="center", color="w", fontsize=8)
 
 
-class NTF:
-    """Initialize NTF model
-
-    Parameters
-    ----------
-    n_components : int
-        Number of components, if n_components is not set : n_components = min(n_samples, n_features)
-
-    fast_hals : bool, default: False
-        Use fast implementation of HALS
-
-    n_iter_hals : int, default: 2
-        Number of HALS iterations prior to fast HALS
-
-    n_shift : int, default: 0
-        max shifting in convolutional NTF
-
-    unimodal : Boolean, default: False
-
-    smooth : Boolean, default: False
-
-    apply_left : Boolean, default: False
-
-    apply_right : Boolean, default: False
-
-    apply_block : Boolean, default: False
-
-    tol : float, default: 1e-6
-        Tolerance of the stopping condition.
-
-    max_iter : int, default: 200
-        Maximum number of iterations.
-
-    leverage :  None | 'standard' | 'robust', default 'standard'
-        Calculate leverage of W and H rows on each component.
-
-    random_state : int, RandomState instance or None, optional, default: None
-        If int, random_state is the seed used by the random number generator;
-        If RandomState instance, random_state is the random number generator;
-        If None, the random number generator is the RandomState instance used
-        by `np.random`.
-
-    verbose : int, default: 0
-        The verbosity level (0/1).
-
-
-    Returns
-    -------
-    NTF model
-
-    Example
-    -------
-    >>> from nmtf import *
-    >>> myNTFmodel = NTF(n_components=4)
-
-    Reference
-    ---------
-    A. Cichocki, P.H.A.N. Anh-Huym, Fast local algorithms for large scale nonnegative matrix and tensor factorizations,
-        IEICE Trans. Fundam. Electron. Commun. Comput. Sci. 92 (3) (2009) 708–721.
-
-    """
+class NMF(NMTF):
 
     def __init__(
         self,
-        n_components=None,
-        fast_hals=False,
-        n_iter_hals=2,
-        n_shift=0,
-        unimodal=False,
-        smooth=False,
-        apply_left=False,
-        apply_right=False,
-        apply_block=False,
-        tol=1e-6,
-        max_iter=150,
-        leverage="standard",
-        random_state=None,
-        verbose=0,
+        **kwargs
     ):
-        self.n_components = n_components
-        self.fast_hals = fast_hals
-        self.n_iter_hals = n_iter_hals
-        self.n_shift = n_shift
-        self.unimodal = unimodal
-        self.smooth = smooth
-        self.apply_left = apply_left
-        self.apply_right = apply_right
-        self.apply_block = apply_block
-        self.tol = tol
-        self.max_iter = max_iter
-        self.leverage = leverage
-        self.random_state = random_state
-        self.verbose = verbose
+        NMTF.__init__(self, which="NMF", **kwargs)
 
-    def fit_transform(
+
+class NTF(NMTF):
+
+    def __init__(
         self,
-        x: np.ndarray,
-        n_blocks: int,
-        n_bootstrap: int = None,
-        regularization: str = None,
-        sparsity: float = 0,
-        w: Union[np.ndarray, None] = None,
-        h: Union[np.ndarray, None] = None,
-        q: Union[np.ndarray, None] = None,
-        update_w: Union[np.ndarray, None] = True,
-        update_h: Union[np.ndarray, None] = True,
-        update_q: Union[np.ndarray, None] = True,
+        **kwargs
     ):
-
-        """Compute Non-negative Tensor Factorization (NTF)
-
-        Find three non-negative matrices (W, H, Q) such as x = W @@ H @@ Q + Error (@@ = tensor product).
-        This factorization can be used for example for
-        dimensionality reduction, source separation or topic extraction.
-
-        The objective function is minimized with an alternating minimization of W
-        and H.
-
-        Parameters
-        ----------
-
-        x: np.ndarray, shape (n_samples, n_features x n_blocks)
-            Constant matrix.
-            X is a tensor with shape (n_samples, n_features, n_blocks), however unfolded along 2nd and 3rd dimensions.
-
-        n_blocks: int
-            Number of blocks defining the 3rd dimension of the tensor
-
-        n_bootstrap: int
-            Number of bootstrap runs
-
-        regularization: str  None | 'components' | 'transformation'
-            Select whether the regularization affects the components (H), the
-            transformation (W) or none of them.
-
-        sparsity: float, default: 0
-            Sparsity target with 0 <= sparsity <= 1 representing the mean % rows per column in W or H set to 0
-.
-        w: Union[np.ndarray, None], shape (n_samples, n_components)
-            prior W
-
-        h: Union[np.ndarray, None], shape (n_features, n_components)
-            prior H
-
-        q: Union[np.ndarray, None], shape (n_blocks, n_components)
-            prior Q
-
-        update_w: bool, default: True
-            Update or keep w fixed
-
-        update_h: bool, default: True
-            Update or keep h fixed
-
-        update_q: bool, default: True
-            Update or keep q fixed
-        
-        Returns
-        -------
-
-        Estimator (dictionary) with following entries
-
-        W : np.ndarray, shape (n_samples, n_components)
-            Solution to the non-negative least squares problem.
-
-        H : np.ndarray, shape (n_features, n_components)
-            Solution to the non-negative least squares problem.
-
-        Q : np.ndarray, shape (n_blocks, n_components)
-            Solution to the non-negative least squares problem.
-        
-        volume : scalar, volume occupied by W and H
-
-        WB : np.ndarray, shape (n_samples, n_components)
-            Percent consistently clustered rows for each component.
-            only if n_bootstrap > 0.
-
-        HB : np.ndarray, shape (n_features, n_components)
-            Percent consistently clustered columns for each component.
-            only if n_bootstrap > 0.
-        
-        diff : scalar, objective minimum achieved
-
-        Example
-        -------
-        >>> from nmtf import *
-        >>> myNTFmodel = NTF(n_components=4)
-        >>> # M: tensor with 5 blocks to be factorized
-        >>> estimator = myNTFmodel.fit_transform(M, 5)
-        
-        Reference
-        ---------
-
-        A. Cichocki, P.H.A.N. Anh-Huym, Fast local algorithms for large scale nonnegative matrix and tensor factorizations,
-        IEICE Trans. Fundam. Electron. Commun. Comput. Sci. 92 (3) (2009) 708–721.
-
-        """
-
-        return non_negative_tensor_factorization(
-            x,
-            n_blocks,
-            W=w,
-            H=h,
-            Q=q,
-            n_components=self.n_components,
-            update_W=update_w,
-            update_H=update_h,
-            update_Q=update_q,
-            fast_hals=self.fast_hals,
-            n_iter_hals=self.n_iter_hals,
-            n_shift=self.n_shift,
-            regularization=regularization,
-            sparsity=sparsity,
-            unimodal=self.unimodal,
-            smooth=self.smooth,
-            apply_left=self.apply_left,
-            apply_right=self.apply_right,
-            apply_block=self.apply_block,
-            n_bootstrap=n_bootstrap,
-            tol=self.tol,
-            max_iter=self.max_iter,
-            leverage=self.leverage,
-            random_state=self.random_state,
-            verbose=self.verbose,
-        )
-
-    def predict(self, estimator, blocks=None, cluster_by_stability=False, custom_order=False):
-
-        """See function description in class NMF
-
-        """
-
-        return nmf_predict(
-            estimator,
-            blocks=blocks,
-            leverage=self.leverage,
-            cluster_by_stability=cluster_by_stability,
-            custom_order=custom_order,
-            verbose=self.verbose,
-        )
-
-    @staticmethod
-    def permutation_test_score(estimator, y, n_permutations=100):
-
-        """See function description in class NMF
-
-        """
-
-        return nmf_permutation_test_score(estimator, y, n_permutations=n_permutations)
+        NMTF.__init__(self, which="NTF", **kwargs)

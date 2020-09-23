@@ -20,11 +20,10 @@ def test():
             expected_estimator[key] = (
                 np.asarray(decoded_array[key]) if isinstance(decoded_array[key], list) else decoded_array[key]
             )
-    m0 = df.values
-    n_blocks = 5
-    my_nt_fmodel = NTF(n_components=5)
-    estimator = my_nt_fmodel.fit_transform(m0, n_blocks, sparsity=0.8, n_bootstrap=10)
-    estimator = my_nt_fmodel.predict(estimator)
+    my_nt_fmodel = NTF(x=df.values, n_blocks=5, n_components=5, sparsity=0.8, n_bootstrap=10)
+    my_nt_fmodel.fit_transform()
+    my_nt_fmodel.predict()
+    estimator = my_nt_fmodel.results
 
     # Uncomment to save the estimator in a file
     # with open(DATA_PATH / "expected_result_ntf_new.json", "w") as ofile:
