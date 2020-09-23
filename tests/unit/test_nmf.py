@@ -28,10 +28,12 @@ def test():
     h = np.array([[0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
                   [0.9, 0.8, 0.7, 0.6, 0.5, 0.4]])
     m0 = w.dot(h)
-    my_nt_fmodel = NMF(x=m0, n_components=5)
+    my_nt_fmodel = NMF(x=m0, n_components=2)
+    my_nt_fmodel.fit_transform()
+    my_nt_fmodel.predict()
 
     # Uncomment to save the estimator in a file
-    # with open(DATA_PATH / "expected_result_nmf_new.json", "w") as ofile:
+    # with open(DATA_PATH / "expected_result_nmf.json", "w") as ofile:
     #     ofile.write(json.dumps(my_nt_fmodel.results, cls=JSONEncoder))
     # exit(0)
 

@@ -1029,23 +1029,23 @@ def non_negative_factorization(X, W=None, H=None, n_components=None,
 
     Estimator (dictionary) with following entries
 
-    W : array-like, shape (n_samples, n_components)
+    w : array-like, shape (n_samples, n_components)
         Solution to the non-negative least squares problem.
 
-    H : array-like, shape (n_features, n_components)
+    h : array-like, shape (n_features, n_components)
         Solution to the non-negative least squares problem.
 
     volume : scalar, volume occupied by W and H
 
-    WB : array-like, shape (n_samples, n_components)
+    wb : array-like, shape (n_samples, n_components)
         Percent consistently clustered rows for each component.
         only if n_bootstrap > 0.
 
-    HB : array-like, shape (n_features, n_components)
+    hb : array-like, shape (n_features, n_components)
         Percent consistently clustered columns for each component.
         only if n_bootstrap > 0.
 
-    B : array-like, shape (n_observations, n_components) or (n_features, n_components)
+    b : array-like, shape (n_observations, n_components) or (n_features, n_components)
         only if active convex variant, H = B.T @ X or W = X @ B
     
     diff : Objective minimum achieved
@@ -1252,17 +1252,18 @@ def non_negative_factorization(X, W=None, H=None, n_components=None,
     estimator = {}
     if NMFRobustNRuns <= 1:
         if (NMFFindParts == 0) & (NMFFindCentroids == 0):
-            estimator.update([('W', Mt), ('H', Mw), ('volume', volume), ('diff', diff)])
+            estimator.update([('w', Mt), ('h', Mw), ('volume', volume), ('diff', diff)])
         else:
-            estimator.update([('W', Mt), ('H', Mw), ('volume', volume), ('B', Mh), ('diff', diff)])
+            estimator.update([('w', Mt), ('h', Mw), ('volume', volume), ('b', Mh), ('diff', diff)])
 
     else:
         if (NMFFindParts == 0) & (NMFFindCentroids == 0):
-            estimator.update([('W', Mt), ('H', Mw), ('volume', volume), ('WB', MtPct), ('HB', MwPct), ('diff', diff)])
+            estimator.update([('w', Mt), ('h', Mw), ('volume', volume), ('wb', MtPct), ('hb', MwPct), ('diff', diff)])
         else:
-            estimator.update([('W', Mt), ('H', Mw), ('volume', volume), ('B', Mh), ('WB', MtPct), ('HB', MwPct), ('diff', diff)])
+            estimator.update([('w', Mt), ('h', Mw), ('volume', volume), ('b', Mh), ('wb', MtPct), ('hb', MwPct), ('diff', diff)])
 
     return estimator
+
 
 def nmf_predict(estimator, leverage='robust', blocks=None, cluster_by_stability=False, custom_order=False, verbose=0):
     """Derives ordered sample and feature indexes for future use in ordered heatmaps
@@ -1293,46 +1294,46 @@ def nmf_predict(estimator, leverage='robust', blocks=None, cluster_by_stability=
     -------
 
     Completed estimator with following entries:
-    WL : array-like, shape (n_samples, n_components)
+    wl : array-like, shape (n_samples, n_components)
          Sample leverage on each component
 
-    HL : array-like, shape (n_features, n_components)
+    hl : array-like, shape (n_features, n_components)
          Feature leverage on each component
 
-    QL : array-like, shape (n_blocks, n_components)
+    ql : array-like, shape (n_blocks, n_components)
          Block leverage on each component (NTF only)
 
-    WR : vector-like, shape (n_samples)
+    wr : vector-like, shape (n_samples)
          Ranked sample indexes (by cluster and leverage or stability)
          Used to produce ordered heatmaps
 
-    HR : vector-like, shape (n_features)
+    hr : vector-like, shape (n_features)
          Ranked feature indexes (by cluster and leverage or stability)
          Used to produce ordered heatmaps
 
-    WN : vector-like, shape (n_components)
+    wn : vector-like, shape (n_components)
          Sample cluster bounds in ordered heatmap
 
-    HN : vector-like, shape (n_components)
+    hn : vector-like, shape (n_components)
          Feature cluster bounds in ordered heatmap
 
-    WC : vector-like, shape (n_samples)
+    wc : vector-like, shape (n_samples)
          Sample assigned cluster
 
-    HC : vector-like, shape (n_features)
+    hc : vector-like, shape (n_features)
          Feature assigned cluster
 
-    QC : vector-like, shape (size(blocks))
+    qc : vector-like, shape (size(blocks))
          Block assigned cluster (NTF only)
 
     """
 
-    Mt = estimator['W']
-    Mw = estimator['H']
-    if 'Q' in estimator:
+    Mt = estimator['w']
+    Mw = estimator['h']
+    if 'q' in estimator:
         # X is a 3D tensor, in unfolded form of a 2D array
         # horizontal concatenation of blocks of equal size.
-        Mb = estimator['Q']
+        Mb = estimator['q']
         NMFAlgo = 5
         NBlocks = Mb.shape[0]
         BlkSize = Mw.shape[0] * np.ones(NBlocks)
@@ -1346,13 +1347,13 @@ def nmf_predict(estimator, leverage='robust', blocks=None, cluster_by_stability=
             NBlocks = blocks.shape[0]
             BlkSize = blocks
 
-    if 'WB' in estimator:
-        MtPct = estimator['WB']
+    if 'wb' in estimator:
+        MtPct = estimator['wb']
     else:
         MtPct = None
 
-    if 'HB' in estimator:
-        MwPct = estimator['HB']
+    if 'hb' in estimator:
+        MwPct = estimator['hb']
     else:
         MwPct = None
 
@@ -1386,13 +1387,14 @@ def nmf_predict(estimator, leverage='robust', blocks=None, cluster_by_stability=
         print(message)
 
     myStatusBox.close()
-    if 'Q' in estimator:
-        estimator.update([('WL', Mtn), ('HL', Mwn), ('WR', RCt), ('HR', RCw), ('WN', NCt), ('HN', NCw),
-                          ('WC', RowClust), ('HC', ColClust), ('QL', Mbn), ('QC', BlockClust)])
+    if 'q' in estimator:
+        estimator.update([('wl', Mtn), ('hl', Mwn), ('wr', RCt), ('hr', RCw), ('wn', NCt), ('hn', NCw),
+                          ('wc', RowClust), ('hc', ColClust), ('ql', Mbn), ('qc', BlockClust)])
     else:
-        estimator.update([('WL', Mtn), ('HL', Mwn), ('WR', RCt), ('HR', RCw), ('WN', NCt), ('HN', NCw),
-                          ('WC', RowClust), ('HC', ColClust), ('QL', None), ('QC', None)])
+        estimator.update([('wl', Mtn), ('hl', Mwn), ('wr', RCt), ('hr', RCw), ('wn', NCt), ('hn', NCw),
+                          ('wc', RowClust), ('hc', ColClust), ('ql', None), ('qc', None)])
     return estimator
+
 
 def nmf_permutation_test_score(estimator, y, n_permutations=100, verbose=0):
     """Do a permutation test to assess association between ordered samples and some covariate
@@ -1435,9 +1437,9 @@ def nmf_permutation_test_score(estimator, y, n_permutations=100, verbose=0):
 
 
     """
-    Mt = estimator['W']
-    RCt = estimator['WR']
-    NCt = estimator['WN']
+    Mt = estimator['w']
+    RCt = estimator['wr']
+    NCt = estimator['wn']
     RowGroups = y
     uniques, index = np.unique([row for row in RowGroups], return_index=True)
     ListGroups = RowGroups[index]
@@ -1452,8 +1454,8 @@ def nmf_permutation_test_score(estimator, y, n_permutations=100, verbose=0):
         GlobalSign(Nrun, nbGroups, Mt, RCt, NCt, RowGroups, ListGroups, Ngroup, myStatusBox)
 
     estimator.update(
-        [('score', prun), ('pvalue', Pglob), ('CS', ClusterSize), ('CP', ClusterProb), ('CG', ClusterGroup),
-         ('CN', ClusterNgroup)])
+        [('score', prun), ('pvalue', Pglob), ('cs', ClusterSize), ('cp', ClusterProb), ('cg', ClusterGroup),
+         ('cn', ClusterNgroup)])
     return estimator
 
 def non_negative_tensor_factorization(X, n_blocks, W=None, H=None, Q=None, n_components=None,
@@ -1562,22 +1564,22 @@ def non_negative_tensor_factorization(X, n_blocks, W=None, H=None, Q=None, n_com
 
         Estimator (dictionary) with following entries
 
-        W : array-like, shape (n_samples, n_components)
+        w : array-like, shape (n_samples, n_components)
             Solution to the non-negative least squares problem.
 
-        H : array-like, shape (n_features, n_components)
+        h : array-like, shape (n_features, n_components)
             Solution to the non-negative least squares problem.
 
-        Q : array-like, shape (n_blocks, n_components)
+        q : array-like, shape (n_blocks, n_components)
             Solution to the non-negative least squares problem.
                
         volume : scalar, volume occupied by W and H
         
-        WB : array-like, shape (n_samples, n_components)
+        wb : array-like, shape (n_samples, n_components)
             Percent consistently clustered rows for each component.
             only if n_bootstrap > 0.
 
-        HB : array-like, shape (n_features, n_components)
+        hb : array-like, shape (n_features, n_components)
             Percent consistently clustered columns for each component.
             only if n_bootstrap > 0.
 
@@ -1718,8 +1720,8 @@ def non_negative_tensor_factorization(X, n_blocks, W=None, H=None, Q=None, n_com
 
     estimator = {}
     if NMFRobustNRuns <= 1:
-        estimator.update([('W', Mt), ('H', Mw), ('Q', Mb), ('volume', volume), ('diff', diff)])
+        estimator.update([('w', Mt), ('h', Mw), ('q', Mb), ('volume', volume), ('diff', diff)])
     else:
-        estimator.update([('W', Mt), ('H', Mw), ('Q', Mb), ('volume', volume), ('WB', MtPct), ('HB', MwPct), ('diff', diff)])
+        estimator.update([('w', Mt), ('h', Mw), ('q', Mb), ('volume', volume), ('wb', MtPct), ('hb', MwPct), ('diff', diff)])
 
     return estimator
