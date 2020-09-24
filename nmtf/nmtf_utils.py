@@ -636,7 +636,7 @@ def sparse_opt(b, alpha, two_sided):
     
     """
     m = b.size
-    if two_sided is False:
+    if two_sided == False:
         m_alpha = (np.sqrt(m) - np.linalg.norm(b, ord=1)/np.linalg.norm(b, ord=2))/(np.sqrt(m)-1)
         if (alpha == 0) or (alpha <= m_alpha):
             return b

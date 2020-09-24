@@ -150,7 +150,7 @@ class NMTF:
             Maximum number of iterations in multiplicative warm-up to projected gradient (beta_loss = 'frobenius' only).
 
         convex:  str, None | 'components' | 'transformation', default None
-            Apply convex constraint on W or H.
+            Apply convex constraint on w or h.
 
         kernel: str, 'linear' | 'quadratic' | 'radial', default 'linear'
             Can be set if convex = 'transformation'.
@@ -165,13 +165,13 @@ class NMTF:
             Number of bootstrap runs.
 
         regularization:  None | 'components' | 'transformation'
-            Select whether the regularization affects the components (H), the
-            transformation (W) or none of them.
+            Select whether the regularization affects the components (h), the
+            transformation (w) or none of them.
 
         sparsity: float, default: 0
             Sparsity target with 0 <= sparsity <= 1 representing either:
-            - the % rows in W or H set to 0 (when use_hals = False)
-            - the mean % rows per column in W or H set to 0 (when use_hals = True)
+            - the % rows in w or h set to 0 (when use_hals = False)
+            - the mean % rows per column in w or h set to 0 (when use_hals = True)
 
         use_hals: bool, default: False
             True -> HALS algorithm (note that convex & kullback-leibler loss options are not supported)
@@ -197,19 +197,19 @@ class NMTF:
         apply_block: bool, default: False
 
         skewness: bool, default False
-            When solving mixture problems, columns of X at the extremities of the convex hull will be given largest
+            When solving mixture problems, columns of x at the extremities of the convex hull will be given largest
             weights.
             The column weight is a function of the skewness and its sign.
-            The expected sign of the skewness is based on the skewness of W components, as returned by the first pass
+            The expected sign of the skewness is based on the skewness of w components, as returned by the first pass
             of a 2-steps convex NMF. Thus, during the first pass, skewness must be set to False.
-            Can be set only if convex = 'transformation' and prior W and H have been defined.
+            Can be set only if convex = 'transformation' and prior w and h have been defined.
 
         null_priors: bool, default False
-            Cells of H with prior cells = 0 will not be updated.
-            Can be set only if prior H has been defined.
+            Cells of h with prior cells = 0 will not be updated.
+            Can be set only if prior h has been defined.
 
         leverage: str, None | 'standard' | 'robust', default 'standard'
-            Calculate leverage of W and H rows on each component.
+            Calculate leverage of w and h rows on each component.
 
         verbose: int, default 0
 
@@ -250,7 +250,7 @@ class NMTF:
             P. Fogel, D.M. Hawkins, C. Beecher, G. Luta, S. S. Young (2013). A Tale of Two Matrix Factorizations.
             The American Statistician, Vol. 67, Issue 4.
 
-            C. H.Q. Ding et al (2010) Convex and Semi-Nonnegative Matrix Factorizations
+            C. h.q. Ding et al (2010) Convex and Semi-Nonnegative Matrix Factorizations
             IEEE Transactions on Pattern Analysis and Machine Intelligence Vol: 32 Issue: 1
 
         """
@@ -341,12 +341,12 @@ class NMTF:
 
         """Compute Non-negative Matrix Factorization (NMF)
 
-        Find two non-negative matrices (W, H) such as x = W @ H.T + Error.
+        Find two non-negative matrices (w, h) such as x = w @ h.T + Error.
         This factorization can be used for example for
         dimensionality reduction, source separation or topic extraction.
 
-        The objective function is minimized with an alternating minimization of W
-        and H.
+        The objective function is minimized with an alternating minimization of w
+        and h.
 
         Returns
         -------
@@ -362,7 +362,7 @@ class NMTF:
         q : np.ndarray, shape (n_blocks, n_components)
             Solution to the non-negative least squares problem. (if which is 'NTF')
 
-        volume : scalar, volume occupied by W and H
+        volume : scalar, volume occupied by w and h
 
         wb : np.ndarray, shape (n_samples, n_components)
             A sample is clustered in cluster k if its leverage on component k is higher than on any other components.
@@ -377,7 +377,7 @@ class NMTF:
                 Only if n_bootstrap > 0.
 
         b : np.ndarray, shape (n_observations, n_components) or (n_features, n_components)
-            Only if active convex variant, H = B.T @ X or W = X @ B
+            Only if active convex variant, h = B.T @ x or w = x @ B
 
         diff : scalar, objective minimum achieved
 
@@ -388,19 +388,19 @@ class NMTF:
         P. Fogel, D.M. Hawkins, C. Beecher, G. Luta, S. S. Young (2013). A Tale of Two Matrix Factorizations.
         The American Statistician, Vol. 67, Issue 4.
 
-        C. H.Q. Ding et al (2010) Convex and Semi-Nonnegative Matrix Factorizations
+        C. h.q. Ding et al (2010) Convex and Semi-Nonnegative Matrix Factorizations
         IEEE Transactions on Pattern Analysis and Machine Intelligence Vol: 32 Issue: 1
 
         """
 
         if self.which == "NMF":
             self.estimator = non_negative_factorization(
-                self.x,
-                W=self.wp,
-                H=self.hp,
+                x=self.x,
+                w=self.wp,
+                h=self.hp,
                 n_components=self.n_components,
-                update_W=self.update_w,
-                update_H=self.update_h,
+                update_w=self.update_w,
+                update_h=self.update_h,
                 beta_loss=self.beta_loss,
                 use_hals=self.use_hals,
                 n_bootstrap=self.n_bootstrap,
@@ -421,13 +421,13 @@ class NMTF:
             self.estimator = non_negative_tensor_factorization(
                 self.x,
                 self.n_blocks,
-                W=self.wp,
-                H=self.hp,
-                Q=self.qp,
+                w=self.wp,
+                h=self.hp,
+                q=self.qp,
                 n_components=self.n_components,
-                update_W=self.update_w,
-                update_H=self.update_h,
-                update_Q=self.update_q,
+                update_w=self.update_w,
+                update_h=self.update_h,
+                update_q=self.update_q,
                 fast_hals=self.fast_hals,
                 n_iter_hals=self.n_iter_hals,
                 n_shift=self.n_shift,
@@ -510,7 +510,7 @@ class NMTF:
     def plot(self):
 
         self.fig_result = self.plot_matrices(
-            "$W \\cdot H^t$",
+            "$w \\cdot h^t$",
             [self.x_approx, self.w, self.h.T],
             x_ax_labels=["features", "values"],
             w_ax_labels=[None, "values in metafeatures"],
@@ -526,7 +526,7 @@ class NMTF:
         )
 
         self.fig_input = self.plot_matrices(
-            "$X$",
+            "$x$",
             [self.x, self.w_input, self.h_input],
             x_ax_labels=["features", "values"],
             w_ax_labels=[None, "value in metafeatures"],
@@ -534,12 +534,12 @@ class NMTF:
         )
 
         self.fig_diff = self.plot_matrices(
-            "$\\sqrt{\\frac{\\left(W \\cdot H^t - X\\right)^2}{X^2}}$ ($\\%$)",
+            "$\\sqrt{\\frac{\\left(w \\cdot h^t - x\\right)^2}{x^2}}$ ($\\%$)",
             100 * np.sqrt(((self.x_approx - self.x) ** 2) / self.x ** 2)
         )
 
         self.fig_diff_l = self.plot_matrices(
-            "$\\sqrt{\\frac{\\left(W_L \\cdot H_L^t - X\\right)^2}{X^2}}$ ($\\%$)",
+            "$\\sqrt{\\frac{\\left(W_L \\cdot H_L^t - x\\right)^2}{x^2}}$ ($\\%$)",
             100 * np.sqrt(((self.x_approx_l - self.x) ** 2) / self.x ** 2)
         )
 

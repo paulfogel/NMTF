@@ -15,18 +15,18 @@ def NMFProjGrad(V, Vmis, W, Hinit, NMFAlgo, lambdax, tol, MaxIterations, NMFPrio
     Input:
         V: Input matrix
         Vmis: Define missing values (0 = missing cell, 1 = real cell)
-        W: Left factoring vectors (fixed)
+        w: Left factoring vectors (fixed)
         Hinit: Right factoring vectors (initial values)
         NMFAlgo: =1,3: Divergence; =2,4: Least squares;
         lambdax: Sparseness parameter
             =-1: no penalty
-            < 0: Target percent zeroed rows in H
+            < 0: Target percent zeroed rows in h
             > 0: Current penalty
         tol: Tolerance
-        MaxIterations: max number of iterations to achieve norm(projected gradient) < tol
-        NMFPriors: Elements in H that should be updated (others remain 0)
+        max_iterations: max number of iterations to achieve norm(projected gradient) < tol
+        NMFPriors: Elements in h that should be updated (others remain 0)
     Output:
-        H: Estimated right factoring vectors
+        h: Estimated right factoring vectors
         tol: Current level of the tolerance
         lambdax: Current level of the penalty
     
@@ -159,14 +159,14 @@ def NMFProjGradKernel(Kernel, V, Vmis, W, Hinit, NMFAlgo, tol, MaxIterations, NM
         Kernel: Kernel used
         V: Input matrix
         Vmis: Define missing values (0 = missing cell, 1 = real cell)
-        W: Left factoring vectors (fixed)
+        w: Left factoring vectors (fixed)
         Hinit: Right factoring vectors (initial values)
         NMFAlgo: =1,3: Divergence; =2,4: Least squares;
         tol: Tolerance
-        MaxIterations: max number of iterations to achieve norm(projected gradient) < tol
-        NMFPriors: Elements in H that should be updated (others remain 0)
+        max_iterations: max number of iterations to achieve norm(projected gradient) < tol
+        NMFPriors: Elements in h that should be updated (others remain 0)
     Output:
-        H: Estimated right factoring vectors
+        h: Estimated right factoring vectors
         tol: Current level of the tolerance
     
     Reference
@@ -278,7 +278,7 @@ def NMFProjGradKernel(Kernel, V, Vmis, W, Hinit, NMFAlgo, tol, MaxIterations, NM
 def NMFApplyKernel(M, NMFKernel, Mt, Mw):
     """Calculate kernel (used with convex NMF)
     Input:
-        M: Input matrix
+        m: Input matrix
         NMFKernel: Type of kernel
             =-1: linear
             = 2: quadratic
@@ -319,7 +319,7 @@ def NMFApplyKernel(M, NMFKernel, Mt, Mw):
 def NMFReweigh(M, Mt, NMFPriors, AddMessage):
     """Overload skewed variables (used with deconvolution only)
     Input:
-         M: Input matrix
+         m: Input matrix
          Mt: Left hand matrix
          NMFPriors: priors on right hand matrix
     Output:
@@ -439,16 +439,16 @@ def NMFSolve(M, Mmis, Mt0, Mw0, nc, tolerance, precision, LogIter, Status0, MaxI
     """
     Estimate left and right hand matrices
     Input:
-         M: Input matrix
-         Mmis: Define missing values (0 = missing cell, 1 = real cell)
+         m: Input matrix
+         m_mis: Define missing values (0 = missing cell, 1 = real cell)
          Mt0: Initial left hand matrix
          Mw0: Initial right hand matrix
          nc: NMF rank
          tolerance: Convergence threshold
          precision: Replace 0-value in multiplication rules
-         LogIter: Log results through iterations
-         Status0: Initial displayed status to be updated during iterations
-         MaxIterations: Max iterations
+         log_iter: Log results through iterations
+         status0: Initial displayed status to be updated during iterations
+         max_iterations: Max iterations
          NMFAlgo: =1,3: Divergence; =2,4: Least squares;
          NMFFixUserLHE: = 1 => fixed left hand matrix columns
          NMFFixUserRHE: = 1 => fixed  right hand matrix columns
@@ -472,7 +472,7 @@ def NMFSolve(M, Mmis, Mt0, Mw0, nc, tolerance, precision, LogIter, Status0, MaxI
     Reference
     ---------
 
-    C. H.Q. Ding et al (2010) Convex and Semi-Nonnegative Matrix Factorizations
+    C. h.Q. Ding et al (2010) Convex and Semi-Nonnegative Matrix Factorizations
     IEEE Transactions on Pattern Analysis and Machine Intelligence Vol: 32 Issue: 1
 
     """
@@ -496,7 +496,7 @@ def NMFSolve(M, Mmis, Mt0, Mw0, nc, tolerance, precision, LogIter, Status0, MaxI
     # Add weights
     if n_NMFPriors > 0:
         if NMFReweighColumns > 0:
-            # A local copy of M will be updated
+            # A local copy of m will be updated
             M = np.copy(M)
             NMFPriors, AddMessage, ErrMessage = NMFReweigh(M, Mt, NMFPriors, AddMessage)
             if ErrMessage != "":
@@ -869,7 +869,7 @@ def NMFSolve(M, Mmis, Mt0, Mw0, nc, tolerance, precision, LogIter, Status0, MaxI
     return [Mt, Mw, diff, Mh, NMFPriors, flagNonconvex, AddMessage, ErrMessage, cancel_pressed]
 
 def NTFStack(M, Mmis, NBlocks):
-    """Unfold tensor M
+    """Unfold tensor m
         for future use with NMF
     """
     n, p = M.shape
@@ -920,16 +920,16 @@ def NTFSolve_simple(M, Mmis, Mt0, Mw0, Mb0, nc, tolerance, LogIter, Status0, Max
     """
     Estimate NTF matrices (HALS)
     Input:
-         M: Input matrix
-         Mmis: Define missing values (0 = missing cell, 1 = real cell)
+         m: Input matrix
+         m_mis: Define missing values (0 = missing cell, 1 = real cell)
          Mt0: Initial left hand matrix
          Mw0: Initial right hand matrix
          Mb0: Initial block hand matrix
          nc: NTF rank
          tolerance: Convergence threshold
-         LogIter: Log results through iterations
-         Status0: Initial displayed status to be updated during iterations
-         MaxIterations: Max iterations
+         log_iter: Log results through iterations
+         status0: Initial displayed status to be updated during iterations
+         max_iterations: Max iterations
          NMFFixUserLHE: = 1 => fixed left hand matrix columns
          NMFFixUserRHE: = 1 => fixed  right hand matrix columns
          NMFFixUserBHE: = 1 => fixed  block hand matrix columns
@@ -951,7 +951,7 @@ def NTFSolve_simple(M, Mmis, Mt0, Mw0, Mb0, nc, tolerance, LogIter, Status0, Max
     Reference
     ---------
 
-    A. Cichocki, P.H.A.N. Anh-Huym, Fast local algorithms for large scale nonnegative matrix and tensor factorizations,
+    A. Cichocki, P.h.A.N. Anh-Huym, Fast local algorithms for large scale nonnegative matrix and tensor factorizations,
         IEICE Trans. Fundam. Electron. Commun. Comput. Sci. 92 (3) (2009) 708–721.
 
     """
@@ -969,7 +969,7 @@ def NTFSolve_simple(M, Mmis, Mt0, Mw0, Mb0, nc, tolerance, LogIter, Status0, Max
     Mt = np.copy(Mt0)
     Mw = np.copy(Mw0)
     Mb = np.copy(Mb0)
-    #     StepIter = math.ceil(MaxIterations/10)
+    #     StepIter = math.ceil(max_iterations/10)
     StepIter = 1
     pbar_step = 100 * StepIter / MaxIterations
  
@@ -1140,16 +1140,16 @@ def NTFSolve_conv(M, Mmis, Mt0, Mw0, Mb0, nc, tolerance, LogIter, Status0, MaxIt
              NMFSparseLevel, NTFUnimodal, NTFSmooth, NTFLeftComponents, NTFRightComponents, NTFBlockComponents, NBlocks, NTFNConv, NMFPriors, myStatusBox):
     """Estimate NTF matrices (HALS)
      Input:
-         M: Input matrix
-         Mmis: Define missing values (0 = missing cell, 1 = real cell)
+         m: Input matrix
+         m_mis: Define missing values (0 = missing cell, 1 = real cell)
          Mt0: Initial left hand matrix
          Mw0: Initial right hand matrix
          Mb0: Initial block hand matrix
          nc: NTF rank
          tolerance: Convergence threshold
-         LogIter: Log results through iterations
-         Status0: Initial displayed status to be updated during iterations
-         MaxIterations: Max iterations
+         log_iter: Log results through iterations
+         status0: Initial displayed status to be updated during iterations
+         max_iterations: Max iterations
          NMFFixUserLHE: = 1 => fixed left hand matrix columns
          NMFFixUserRHE: = 1 => fixed  right hand matrix columns
          NMFFixUserBHE: = 1 => fixed  block hand matrix columns
@@ -1189,7 +1189,7 @@ def NTFSolve_conv(M, Mmis, Mt0, Mw0, Mb0, nc, tolerance, LogIter, Status0, MaxIt
     Mt_simple = np.copy(Mt0)
     Mw_simple = np.copy(Mw0)
     Mb_simple = np.copy(Mb0)
-    #     StepIter = math.ceil(MaxIterations/10)
+    #     StepIter = math.ceil(max_iterations/10)
     StepIter = 1
     pbar_step = 100 * StepIter / MaxIterations
 
@@ -1350,17 +1350,17 @@ def NTFSolveFast(M, Mmis, Mt0, Mw0, Mb0, nc, tolerance, precision, LogIter, Stat
                  NBlocks, myStatusBox):
     """Estimate NTF matrices (fast HALS)
      Input:
-         M: Input matrix
-         Mmis: Define missing values (0 = missing cell, 1 = real cell)
+         m: Input matrix
+         m_mis: Define missing values (0 = missing cell, 1 = real cell)
          Mt0: Initial left hand matrix
          Mw0: Initial right hand matrix
          Mb0: Initial block hand matrix
          nc: NTF rank
          tolerance: Convergence threshold
          precision: Replace 0-values in multiplication rules
-         LogIter: Log results through iterations
-         Status0: Initial displayed status to be updated during iterations
-         MaxIterations: Max iterations
+         log_iter: Log results through iterations
+         status0: Initial displayed status to be updated during iterations
+         max_iterations: Max iterations
          NMFFixUserLHE: fix left hand matrix columns: = 1, else = 0
          NMFFixUserRHE: fix  right hand matrix columns: = 1, else = 0
          NMFFixUserBHE: fix  block hand matrix columns: = 1, else = 0
@@ -1451,7 +1451,7 @@ def NTFSolveFast(M, Mmis, Mt0, Mw0, Mb0, nc, tolerance, precision, LogIter, Stat
     T2w = np.zeros((p, nc))
     T2Block = np.zeros((NBlocks, nc))
 
-    # Transpose M by block once for all
+    # Transpose m by block once for all
     M2 = np.zeros((p, n0))
 
     Mfit = np.zeros((n, p0))

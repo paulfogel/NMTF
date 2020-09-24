@@ -20,8 +20,8 @@ class JSONEncoder(json.JSONEncoder):
         elif isinstance(obj, np.ndarray):
             return obj.tolist()
         elif isinstance(obj, date):
-            return obj.strftime("%Y-%m-%d")
+            return obj.strftime("%Y-%x-%d")
         elif isinstance(obj, datetime):
-            return obj.strftime("%Y-%m-%d %H:%M:%S")
+            return obj.strftime("%Y-%x-%d %h:%M:%S")
         else:
             return json.JSONEncoder.default(self, obj)
