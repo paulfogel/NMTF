@@ -229,11 +229,11 @@ class NMTF:
         >>>                 [11, 12]])
         >>> h = numpy.array([[0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
         >>>                 [0.9, 0.8, 0.7, 0.6, 0.5, 0.4]])
-        >>> x = w.dot(h)
+        >>> matrix = w.dot(h)
         >>> # Use either one of the following 2 lines
         >>> my_nmf_model = NMF(n_components=2, w_input=w, h_input=h)
-        >>> # my_nmf_model = NMF(n_components=2, x=x)
-        >>> estimator = my_nmf_model.predict(estimator)
+        >>> # my_nmf_model = NMF(n_components=2, x=matrix)
+        >>> my_nmf_model.predict()
         >>> # sampleGroup: the group each sample is associated with
         >>> # estimator = my_nmf_model.permutation_test_score(estimator, RowGroups, n_permutations=100)
         >>>
@@ -300,43 +300,29 @@ class NMTF:
         self.x_cols_name = "Features"
 
         # Test arguments
-
-        if self.which == "NMF":
-            if h_input is None and w_input is not None:
-                raise ValueError("You specified w but not h. Need both!")
-            elif w_input is None and h_input is not None:
-                raise ValueError("You specified h but not w. Need both!")
-            elif x is None and w_input is None:  # if w is None so is h, otherwise would have raised already
-                raise ValueError("Need x or w and h!")
-            elif x is not None and w_input is not None:  # if w is not None neither is h, otherwise would have raised
-                raise ValueError("Can not specify both x and w/h!")
-            elif w_input is not None and h_input is not None:
-                try:
-                    self.x = w_input.dot(h_input)
-                except ValueError:
-                    self.x = w_input.dot(h_input.T)
-
-        elif self.which == "NTF":
-
+        test_array = [w_input, h_input]
+        if self.which == "NTF":
             if self.n_blocks is None:
                 raise ValueError("If using NTF, must specify n_blocks")
-            test_number = sum([w_input is None, h_input is None, q_input is None])
-            if test_number == 3 and x is None:  # no x, w, h, or q was specified
-                raise ValueError("You need to specify either x or w, h and q.")
-            elif 0 <= test_number < 3 and x is not None:  # x was specified but also some of w, h and q
-                raise ValueError("You can not specify both x and w, h and/or q.")
-            elif 0 < test_number < 3 and x is None:  # some but not all of w, h and q was specified but not x
-                raise ValueError("You specified only some of w, h and q but I need the three of them!")
-            elif test_number == 0:  # w, h, and q were specified : compute x from them
-                try:
-                    self.x = w_input.dot(np.concatenate([h_input, q_input], axis=1))
-                except ValueError:
-                    self.x = w_input.dot(np.concatenate([h_input, q_input], axis=0).T)
-            elif x is None:
-                raise ValueError(f"Something weird happened. Check x, w, h and q:\n"
-                                 f" - x: {x}\n - w: {w_input}\n - h: {h_input}\n - q: {q_input}")
-        else:
+            test_array.append(q_input)
+        elif self.which != "NMF":
             raise ValueError(f"Argument 'which' can only be 'NMF' or 'NTF', got '{self.which}'.")
+        test_array = np.array(test_array)
+
+        if test_array.any() and x is not None:
+            raise ValueError("Can not specify both x and w/h(/q)!")
+        elif not test_array.any() and x is None:
+            raise ValueError("Need x, or w and h (and q in NTF)!")
+        elif test_array.all():
+            try:
+                self.x = test_array[0].dot(np.concatenate(test_array[1:], axis=1))
+            except ValueError:
+                self.x = test_array[0].dot(np.concatenate(test_array[1:], axis=0).T)
+        elif test_array.any():
+            raise ValueError("You specified one of w and h (and q in NTF). Need all of them!")
+        elif x is None:
+            raise ValueError(f"Something weird happened. Check x, w, h (and q if NTF):\n"
+                             f" - x: {x}\n - w: {w_input}\n - h: {h_input}\n - q: {q_input}")
 
         self.b = self.x_approx = self.x_approx_l = np.array([])
         self.w = self.h = self.q = self.wb = self.hb = np.array([])
