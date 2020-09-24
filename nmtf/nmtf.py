@@ -14,7 +14,6 @@ from .nmtf_base import (
     non_negative_tensor_factorization,
 )
 from typing import Union, List
-import inspect
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt

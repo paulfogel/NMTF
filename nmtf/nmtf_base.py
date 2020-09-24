@@ -7,13 +7,7 @@
 # License: MIT
 # Jan 4, '20
 # Initialize progressbar
-import pandas as pd
-import math
-import numpy as np
 from sklearn.utils.extmath import randomized_svd
-from tqdm import tqdm
-from scipy.stats import hypergeom
-from scipy.optimize import nnls
 
 from .nmtf_core import *
 from .nmtf_utils import *
