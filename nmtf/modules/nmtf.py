@@ -47,7 +47,7 @@ class NMTF:
         update_q: bool = True,
         beta_loss: str = 'frobenius',
         tol: float = 1e-6,
-        max_iter: int = 200,
+        max_iter: int = 150,
         max_iter_mult: int = 20,
         convex: str = None,
         kernel: str = "linear",
